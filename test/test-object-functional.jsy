@@ -1,5 +1,7 @@
 require('source-map-support').install()
 
+global.Observable = require('zen-observable')
+
 const tap = require('tap-lite-tester')
 
 //const objectFunctional = require('object-functional')

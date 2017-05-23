@@ -11,9 +11,6 @@ exports.updateObservable = updateObservable;
 exports.stateActionDispatch = stateActionDispatch;
 exports.isObjectChanged = isObjectChanged;
 exports.asDispatchCallbackPipeline = asDispatchCallbackPipeline;
-const g_Observable = require('any-observable');
-//const g_Observable = 'undefined' !== typeof Observable ? Observable : require('any-observable')
-
 exports.default = asObjectFunctionalClass;
 function asObjectFunctionalClass(...options) {
   if (options.useInitialValue) {
@@ -73,7 +70,7 @@ function asFunctionalObject(host, ...options) {
         host_props = {},
         impl_props = {};
   {
-    const Observable = options.Observable || g_Observable;
+    const Observable = _findUsableObservable(options);
     const observable = Observable.from(notify.observable || notify);
     if (null == observable || 'function' !== typeof observable.subscribe) {
       throw new TypeError(`Notify option is expected to be ES Observable compatible`);
@@ -164,10 +161,27 @@ function _injectActions(defineAction, injectActions) {
 
 // ---
 
+function _findUsableObservable(options) {
+  if (undefined !== options.Observable) {
+    return options.Observable;
+  }
+  if (undefined !== asFunctionalObject.Observable) {
+    return asFunctionalObject.Observable;
+  }
+  if ('undefined' !== typeof window && undefined !== window.Observable) {
+    return window.Observable;
+  }
+  if ('undefined' !== typeof global && undefined !== global.Observable) {
+    return global.Observable;
+  }
+  throw new TypeError(`Unable to locate an ES Observable implementation`);
+}
+
+// ---
 
 function updateObservable(options = {}) {
   {
-    const Observable = options.Observable || g_Observable;
+    const Observable = _findUsableObservable(options);
     const observable = new Observable(addObserver);
     update.observable = observable;
     if (Symbol.observable) {

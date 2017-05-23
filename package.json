@@ -1,6 +1,6 @@
 {
   "name": "object-functional",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Object-Functional programming paradigm for JavaScript, including change isolation, observables, and frozen views.",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -27,15 +27,12 @@
   "files": [
     "dist/",
     "code/",
-    "test/"
+    "test/",
+    "*.js"
   ],
   "main": "dist/index.js",
   "browser": "dist/index.min.js",
-  "peerDependencies": {
-    "any-observable": "^0.2.0"
-  },
   "devDependencies": {
-    "any-observable": "^0.2.0",
     "babel-cli": "^6.24.1",
     "babel-preset-jsy": "^0.7.1",
     "babili": "^0.1.1",
