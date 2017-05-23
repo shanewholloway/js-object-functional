@@ -37,10 +37,6 @@ export function asStateTransform(xform, xform_name) ::
 export function asFunctionalObject(host, options={}) ::
   const notify = options.notify || updateObservable(options)
 
-  // implement toJS to cooperate with ImmutableJS standard
-  const toJS = @{} value() :: return this
-  const view_props = {toJS}, host_props = {toJS}, impl_props = {}
-
   ::
     const Observable = options.Observable || g_Observable
     const observable = Observable.from(notify.observable || notify)
