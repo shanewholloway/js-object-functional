@@ -1184,6 +1184,10 @@ http-signature@~1.1.0:
     jsprim "^1.2.2"
     sshpk "^1.7.0"
 
+immu@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/immu/-/immu-3.0.0.tgz#dc932eea4ccb4e1ea30bf7ab4ecd35955719d713"
+
 inflight@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/inflight/-/inflight-1.0.6.tgz#49bd6331d7d02d0c09bc910a1075ba8165b56df9"
