@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.asObjectFunctionalClass = asObjectFunctionalClass;
+exports.asFunctionalObjectOptions = asFunctionalObjectOptions;
 exports.asStateTransform = asStateTransform;
 exports.asFunctionalObject = asFunctionalObject;
 exports.updateObservable = updateObservable;
@@ -14,7 +15,23 @@ const g_Observable = require('any-observable');
 //const g_Observable = 'undefined' !== typeof Observable ? Observable : require('any-observable')
 
 exports.default = asObjectFunctionalClass;
-function asObjectFunctionalClass(options = {}) {
+function asObjectFunctionalClass(...options) {
+  if (options.useInitialValue) {
+    return function (initialValue) {
+      return asFunctionalObject(this, ...options, { initialValue });
+    };
+  } else {
+    return function () {
+      return asFunctionalObject(this, ...options);
+    };
+  }
+}const ObjectFunctional = exports.ObjectFunctional = asObjectFunctionalClass();
+
+// ---
+
+function asFunctionalObjectOptions(...options) {
+  options = Object.assign({}, ...options);
+
   if (options.transform) {
     const xform = asStateTransform(options.transform, 'transform');
     options.after = [].concat(options.after || [], xform);
@@ -25,20 +42,14 @@ function asObjectFunctionalClass(options = {}) {
     options.freeze = [].concat(options.freeze || [], xform);
   }
 
-  if (options.useInitialValue) {
-    return function (initialValue) {
-      const opt = Object.assign({}, options, { initialValue });
-      return asFunctionalObject(this, options);
-    };
-  } else {
-    return function () {
-      return asFunctionalObject(this, options);
-    };
+  if (null == options.notify) {
+    options.notify = updateObservable(options);
   }
-}const ObjectFunctional = exports.ObjectFunctional = asObjectFunctionalClass();
-const Base = exports.Base = ObjectFunctional;
 
-// --- 
+  return options;
+}
+
+// ---
 
 function asStateTransform(xform, xform_name) {
   if ('function' !== typeof xform) {
@@ -52,22 +63,22 @@ function asStateTransform(xform, xform_name) {
   };
 }
 
-// --- 
+// ---
 
-function asFunctionalObject(host, options = {}) {
-  const notify = options.notify || updateObservable(options);
+function asFunctionalObject(host, ...options) {
+  options = asFunctionalObjectOptions(...options);
 
-  // implement toJS to cooperate with ImmutableJS standard
-  const toJS = { value() {
-      return this;
-    } };
-  const view_props = { toJS },
-        host_props = { toJS },
+  const notify = options.notify;
+  const view_props = {},
+        host_props = {},
         impl_props = {};
-
   {
     const Observable = options.Observable || g_Observable;
     const observable = Observable.from(notify.observable || notify);
+    if (null == observable || 'function' !== typeof observable.subscribe) {
+      throw new TypeError(`Notify option is expected to be ES Observable compatible`);
+    }
+
     bindObservable(observable);
   }
 
@@ -322,7 +333,7 @@ function isObjectChanged(prev, next) {
   return false;
 }
 
-// --- 
+// ---
 
 function asDispatchCallbackPipeline(callback, callback_name) {
   if (null == callback) {

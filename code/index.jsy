@@ -2,27 +2,36 @@ const g_Observable = require('any-observable')
 //const g_Observable = 'undefined' !== typeof Observable ? Observable : require('any-observable')
 
 export default asObjectFunctionalClass
-export function asObjectFunctionalClass(options={}) ::
+
+export function asObjectFunctionalClass(...options) ::
+  if options.useInitialValue ::
+    return function(initialValue) ::
+      return asFunctionalObject(this, ...options, {initialValue})
+  else ::
+    return function() ::
+      return asFunctionalObject(this, ...options)
+
+export const ObjectFunctional = asObjectFunctionalClass()
+
+// ---
+
+export function asFunctionalObjectOptions(...options) ::
+  options = Object.assign({}, ...options)
+
   if options.transform ::
     const xform = asStateTransform(options.transform, 'transform')
     options.after = [].concat @ options.after || [], xform
-    
+
   if options.viewTransform ::
     const xform = asStateTransform(options.viewTransform, 'viewTransform')
     options.freeze = [].concat @ options.freeze || [], xform
 
-  if options.useInitialValue ::
-    return function(initialValue) ::
-      const opt = Object.assign @ {}, options, {initialValue}
-      return asFunctionalObject(this, options)
-  else ::
-    return function() ::
-      return asFunctionalObject(this, options)
+  if null == options.notify ::
+    options.notify = updateObservable(options)
 
-export const ObjectFunctional = asObjectFunctionalClass()
-export const Base = ObjectFunctional
+  return options
 
-// --- 
+// ---
 
 export function asStateTransform(xform, xform_name) ::
   if 'function' !== typeof xform ::
@@ -32,14 +41,19 @@ export function asStateTransform(xform, xform_name) ::
     for const key of Object.keys(view) ::
       view[key] = xform @ view[key]
 
-// --- 
+// ---
 
-export function asFunctionalObject(host, options={}) ::
-  const notify = options.notify || updateObservable(options)
+export function asFunctionalObject(host, ...options) ::
+  options = asFunctionalObjectOptions(...options)
 
+  const notify = options.notify
+  const view_props = {}, host_props = {}, impl_props = {}
   ::
     const Observable = options.Observable || g_Observable
     const observable = Observable.from(notify.observable || notify)
+    if null == observable || 'function' !== typeof observable.subscribe ::
+      throw new TypeError @ `Notify option is expected to be ES Observable compatible`
+
     bindObservable(observable)
 
   const defineAction = bindActionDeclarations @ notify
@@ -167,7 +181,7 @@ export function stateActionDispatch(host, options={}) ::
 
   let state = undefined
   return __dispatch__
-  
+
   function __dispatch__(notify, actionName, actionArgs) ::
     let changed
     if undefined === state ::
@@ -240,7 +254,7 @@ export function isObjectChanged(prev, next) ::
 
   return false
 
-// --- 
+// ---
 
 export function asDispatchCallbackPipeline(callback, callback_name) ::
   if null == callback :: return
@@ -255,6 +269,6 @@ export function asDispatchCallbackPipeline(callback, callback_name) ::
           try :: fn(tgt, arg1, arg2)
           catch err ::
             Promise.reject(err)
-    
+
   throw new TypeError @ `Dispatch expected '${callback_name}' option to be a function instance or list of functions`
 
