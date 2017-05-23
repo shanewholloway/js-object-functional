@@ -1,0 +1,66 @@
+{
+  "name": "object-functional",
+  "version": "0.0.0",
+  "description": "Object-Functional programming paradigm for JavaScript, including change isolation, observables, and frozen views.",
+  "license": "BSD-2-Clause",
+  "author": "Shane Holloway <shane.holloway@ieee.org>",
+  "homepage": "https://github.com/shanewholloway/js-object-functional#readme",
+  "bugs": {
+    "url": "https://github.com/shanewholloway/js-object-functional/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/shanewholloway/js-object-functional.git"
+  },
+  "keywords": [
+    "object-functional",
+    "object",
+    "functional",
+    "redux",
+    "reducer",
+    "observable",
+    "action",
+    "notification",
+    "immutable",
+    "view"
+  ],
+  "files": [
+    "dist/",
+    "code/",
+    "test/"
+  ],
+  "main": "dist/index.js",
+  "browser": "dist/index.min.js",
+  "dependencies": {
+    "any-observable": "^0.2.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-jsy": "^0.7.1",
+    "babili": "^0.1.1",
+    "tap-lite-tester": "^0.4.0",
+    "zen-observable": "^0.5.1"
+  },
+  "babel": {
+    "presets": [
+      [
+        "jsy",
+        {
+          "targets": {
+            "node": "7.1",
+            "browsers": "> 5%"
+          }
+        }
+      ]
+    ]
+  },
+  "scripts": {
+    "start": "node dist",
+    "build": "npm -s run build:code && npm -s run build:min",
+    "build:code": "babel -s true -x .js,.jsy code -d dist",
+    "build:min": "babili --no-babelrc -s true dist/index.js -o dist/index.min.js",
+    "watch": "npm -s run build:code -- --watch",
+    "pretest": "npm -s run build",
+    "test": "babel-node ./test/test-object-functional.jsy"
+  }
+}

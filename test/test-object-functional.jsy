@@ -1,0 +1,77 @@
+require('source-map-support').install()
+
+const tap = require('tap-lite-tester')
+
+//const objectFunctional = require('object-functional')
+const {ObjectFunctional} = require('../dist')
+
+tap.start()
+
+
+tap.test @ 'Smoke test', t => ::
+  class TestObject extends ObjectFunctional ::
+
+  const obj = new TestObject()
+
+
+tap.test @ 'Action test', t => ::
+  let obj, view1, view2
+
+  class TestObject extends ObjectFunctional ::
+    asAction = this.someTestAction
+
+    someTestAction(testKey, testValue) ::
+      t.notStrictEqual(this, obj)
+      t.notStrictEqual(this, view1)
+      t.notStrictEqual(this, view2)
+
+      this[testKey] = testValue
+
+  obj = new TestObject()
+  t.strictEqual(obj.key, undefined)
+
+  view1 = obj.someTestAction('key', 'some-value')
+  t.strictEqual(obj.key, undefined)
+  t.strictEqual(view1.key, 'some-value')
+
+  view2 = obj.someTestAction('key', 'some-other-value')
+  t.strictEqual(obj.key, undefined)
+  t.strictEqual(view1.key, 'some-value')
+  t.strictEqual(view2.key, 'some-other-value')
+
+
+tap.test @ 'Subscribe test', t => ::
+  let obj, view1, view2
+
+  class TestObject extends ObjectFunctional ::
+    asAction = this.someTestAction
+
+    someTestAction(testKey, testValue) ::
+      t.notStrictEqual(this, obj)
+      t.notStrictEqual(this, view1)
+      t.notStrictEqual(this, view2)
+
+      this[testKey] = testValue
+
+  obj = new TestObject()
+
+  const _update_log_ =  []
+  obj.subscribe @ view => ::
+    _update_log_.push @ view ? view.key : null
+
+  t.strictEqual(obj.key, undefined)
+  t.deepEqual(_update_log_, [null])
+
+  view1 = obj.someTestAction('key', 'some-value')
+  t.strictEqual(obj.key, undefined)
+  t.strictEqual(view1.key, 'some-value')
+  t.deepEqual(_update_log_, [null, 'some-value'])
+
+  view2 = obj.someTestAction('key', 'some-other-value')
+  t.strictEqual(obj.key, undefined)
+  t.strictEqual(view1.key, 'some-value')
+  t.strictEqual(view2.key, 'some-other-value')
+  t.deepEqual(_update_log_, [null, 'some-value', 'some-other-value'])
+
+
+tap.finish()
