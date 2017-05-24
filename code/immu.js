@@ -1,12 +1,11 @@
 const immu = require('immu')
-const base_module = require('./index')
-const {asObjectFunctionalClass} = require('./index')
+const {asFunctionalObject} = require('./index')
 
-const asImmuFunctionalObject = (host, ...options) => ::
-  base_module.asFunctionalObject @ host, {transform: immu}, ...options
+function asImmuFunctionalObject(host, ...options) ::
+  return asFunctionalObject @ host, {transform: immu}, ...options
 
-const ImmuObjectFunctional =
-  base_module.asObjectFunctionalClass({transform: immu})
+function ImmuObjectFunctional() ::
+  return asImmuFunctionalObject(this)
 
 Object.assign @ exports,
   @{} asImmuFunctionalObject, ImmuObjectFunctional
