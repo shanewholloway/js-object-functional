@@ -320,19 +320,17 @@ function asDispatchCallbackPipeline(callback, host_callback, callback_name) {
 // ---
 
 function isObjectChanged(prev, next) {
-  for (const key of Object.keys(prev)) {
-    if (prev[key] !== next[key]) {
-      return true;
-    }
-  }
-
-  for (const key of Object.keys(prev)) {
+  for (const key of Object.keys(next)) {
     if (!(key in prev)) {
-      return true;
+      return true; // added
     }
-  }
-
-  return false;
+  }for (const key of Object.keys(prev)) {
+    if (prev[key] !== next[key]) {
+      return true; // changed
+    }if (!(key in next)) {
+      return true; // removed
+    }
+  }return false;
 }
 
 // ---
