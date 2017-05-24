@@ -64,6 +64,7 @@ tap.test @ 'Action test', t => ::
       t.notStrictEqual(this, view2)
 
       this[testKey] = testValue
+      return this
 
     plainMethod(testKey, testValue) ::
       t.throws @
@@ -111,6 +112,7 @@ tap.test @ 'Subscribe test', t => ::
       t.notStrictEqual(this, view2)
 
       this[testKey] = testValue
+      return this
 
   obj = new TestObject()
 
@@ -148,6 +150,7 @@ tap.test @ 'Immu wrapper test', t => ::
       t.notStrictEqual(this, view2)
 
       this[testKey] = {testKey, testValue}
+      return this
 
     plainMethod(testKey, testValue) ::
       t.throws @

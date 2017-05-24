@@ -176,11 +176,11 @@ function stateActionDispatch(host, options = {}) {
     options.finish = [].concat(options.finish || [], xform);
   }
 
-  const isChanged = options.isChanged || isObjectChanged;
+  const isChanged = options.isChanged || host.__is_changed__ || isObjectChanged;
   const on_before = asDispatchCallbackPipeline(options.before, host.__dispatch_before__, 'before');
   const on_error = asDispatchCallbackPipeline(options.error, host.__dispatch_error__, 'error');
   const on_after = asDispatchCallbackPipeline(options.after, host.__dispatch_after__, 'after');
-  const on_finish = asDispatchCallbackPipeline(options.finish, host.__dispatch_freeze__, 'finish');
+  const on_finish = asDispatchCallbackPipeline(options.finish, host.__dispatch_finish__, 'finish');
   const on_freeze = asDispatchCallbackPipeline(options.freeze, host.__dispatch_freeze__, 'freeze');
 
   if (undefined !== isChanged && 'function' !== typeof isChanged) {
@@ -197,20 +197,22 @@ function stateActionDispatch(host, options = {}) {
     }
   }
 
-  let state = undefined;
+  let state = undefined,
+      state_summary;
   return __dispatch__;
 
   function __dispatch__(notify, actionName, actionArgs) {
-    let changed;
+    let change_summary;
     if (undefined === state) {
       state = initialState(host);
-      changed = true;
+      change_summary = true;
     }
 
     const pre_state = state;
     const tgt = Object.create(host.__impl_proto__());
     Object.assign(tgt, pre_state);
 
+    let result;
     const ctx = { action: [actionName, actionArgs], pre_state };
     try {
       if (undefined !== on_before) {
@@ -219,7 +221,8 @@ function stateActionDispatch(host, options = {}) {
 
       try {
         // dispatch action method
-        tgt[actionName].apply(tgt, actionArgs);
+        result = tgt[actionName].apply(tgt, actionArgs);
+        ctx.result = result;
         // transform from impl down to a view
         Object.setPrototypeOf(tgt, host.__view_proto__());
       } catch (err) {
@@ -249,10 +252,11 @@ function stateActionDispatch(host, options = {}) {
         throw new Error(`Async conflicting update of "${host.constructor.name}" occured`);
       }
 
-      changed = changed || isChanged(pre_state, post_state);
-      ctx.changed = changed;
-      if (changed) {
+      change_summary = isChanged(pre_state, post_state, state_summary, ctx);
+      ctx.changed = !!change_summary;
+      if (change_summary) {
         state = post_state;
+        state_summary = change_summary;
       }
 
       if (undefined !== on_finish) {
@@ -269,10 +273,10 @@ function stateActionDispatch(host, options = {}) {
       Object.freeze(tgt);
     }
 
-    if (changed) {
+    if (change_summary) {
       notify(tgt);
     }
-    return tgt;
+    return result;
   }
 }
 
@@ -319,7 +323,7 @@ function asDispatchCallbackPipeline(callback, host_callback, callback_name) {
 
 // ---
 
-function isObjectChanged(prev, next) {
+function isObjectChanged(prev, next, state_summary, tgt) {
   for (const key of Object.keys(next)) {
     if (!(key in prev)) {
       return true; // added
