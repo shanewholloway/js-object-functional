@@ -1,1 +1,1 @@
-module.exports = exports = require('./dist/immu)
+module.exports = exports = require('./dist/immu')

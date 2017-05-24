@@ -247,7 +247,7 @@ export function isObjectChanged(prev, next) ::
     if prev[key] !== next[key] ::
       return true
 
-  for const key of Object.keys(prev) ::
+  for const key of Object.keys(next) ::
     if ! @ key in prev ::
       return true
 
