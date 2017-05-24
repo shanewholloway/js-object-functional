@@ -101,7 +101,7 @@ function asFunctionalObject(host, ...options) {
     const defineAction = (action, fnActionImpl) => {
       const actionName = action.name;
       const fnActionDispatch = function (...actionArgs) {
-        return dispatchAction(notify, actionName, actionArgs);
+        return dispatchAction(notify, actionName, actionArgs, this);
       };
 
       impl_props[actionName] = { value: fnActionImpl || action };
@@ -173,14 +173,14 @@ function stateActionDispatch(host, options = {}) {
 
   if (options.viewTransform) {
     const xform = bindStateTransform(options.viewTransform, 'viewTransform');
-    options.finish = [].concat(options.finish || [], xform);
+    options.changed = [].concat(options.changed || [], xform);
   }
 
   const isChanged = options.isChanged || host.__is_changed__ || isObjectChanged;
   const on_before = asDispatchCallbackPipeline(options.before, host.__dispatch_before__, 'before');
   const on_error = asDispatchCallbackPipeline(options.error, host.__dispatch_error__, 'error');
   const on_after = asDispatchCallbackPipeline(options.after, host.__dispatch_after__, 'after');
-  const on_finish = asDispatchCallbackPipeline(options.finish, host.__dispatch_finish__, 'finish');
+  const on_changed = asDispatchCallbackPipeline(options.changed, host.__dispatch_changed__, 'changed');
   const on_freeze = asDispatchCallbackPipeline(options.freeze, host.__dispatch_freeze__, 'freeze');
 
   if (undefined !== isChanged && 'function' !== typeof isChanged) {
@@ -198,10 +198,11 @@ function stateActionDispatch(host, options = {}) {
   }
 
   let state = undefined,
-      state_summary;
+      state_summary,
+      tip_view;
   return __dispatch__;
 
-  function __dispatch__(notify, actionName, actionArgs) {
+  function __dispatch__(notify, actionName, actionArgs, view) {
     let change_summary;
     if (undefined === state) {
       state = initialState(host);
@@ -213,7 +214,9 @@ function stateActionDispatch(host, options = {}) {
     Object.assign(tgt, pre_state);
 
     let result;
-    const ctx = { action: [actionName, actionArgs], pre_state };
+    const ctx = { action: [actionName, actionArgs, view],
+      pre_state, isTipView: tip_view === view };
+
     try {
       if (undefined !== on_before) {
         on_before(tgt, ctx);
@@ -257,10 +260,13 @@ function stateActionDispatch(host, options = {}) {
       if (change_summary) {
         state = post_state;
         state_summary = change_summary;
-      }
+        tip_view = tgt;
 
-      if (undefined !== on_finish) {
-        on_finish(tgt, ctx);
+        if (undefined !== on_changed) {
+          on_changed(tgt, ctx);
+        }
+      } else if (tgt === result) {
+        ctx.result = result = tip_view;
       }
     } finally {
       if (undefined !== on_freeze) {
@@ -344,9 +350,9 @@ function bindStateTransform(xform, xform_name) {
     throw new TypeError(`Expected ${xform_name}to be a function`);
   }
 
-  return function (view) {
-    for (const key of Object.keys(view)) {
-      view[key] = xform(view[key]);
+  return function (tgt) {
+    for (const key of Object.keys(tgt)) {
+      tgt[key] = xform(tgt[key]);
     }
   };
 }

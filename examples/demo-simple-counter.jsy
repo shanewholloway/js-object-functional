@@ -1,0 +1,57 @@
+global.Observable = require('zen-observable')
+
+const module = require('../dist')
+
+class Counter extends module.ObjectFunctional ::
+  asAction = this.init
+  init(counter=0) ::
+    this.counter = counter
+    return this
+
+  asAction = this.increment
+  increment(howHigh=1) ::
+    this.counter += howHigh
+    return this
+
+  asAction = this.decrement
+  decrement(howLow=1) ::
+    this.counter -= howLow
+    return this
+
+  mutateShouldFail() ::
+    this.counter = 'fail'
+
+main()
+function main() ::
+  const ts0 = Date.now()
+  const {inspect} = require('util')
+  function debug(ns) ::
+    const td = Date.now() - ts0
+    const repr = inspect @ ns, {colors: true, depth: null}
+    console.log @ `debug [${td}] :: ${repr}\n`
+
+  ::
+    const host0 = new Counter()
+    debug @: host0
+
+    host0.subscribe @ viewUpdate => ::
+      debug @: viewUpdate
+
+    const view1 = host0.init(42)
+    debug @: view1
+
+    const view2 = host0.increment(10)
+    debug @: view2
+
+    const view3 = host0.decrement(20)
+    debug @: view3
+
+    try ::
+      view3.mutateShouldFail()
+      console.error("SHOULD NEVER REACH HERE")
+    catch err ::
+      console.log(`Good expected exception: "${err.message}"`)
+
+    console.log()
+    debug @: host0, view1, view2, view3
+    console.log()

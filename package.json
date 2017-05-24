@@ -1,6 +1,6 @@
 {
   "name": "object-functional",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Object-Functional programming paradigm for JavaScript, including change isolation, observables, and frozen views.",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -61,6 +61,8 @@
     "watch": "npm -s run build:code -- --watch",
     "prepublish": "npm -s run test",
     "pretest": "npm -s run build",
-    "test": "babel-node ./test/test-object-functional.jsy"
+    "test": "babel-node ./test/test-object-functional.jsy",
+    "shellenv": "export PATH=$PWD/node_modules/.bin:$PATH; cd examples; $SHELL -l",
+    "example": "babel-node ./example/demo.jsy"
   }
 }

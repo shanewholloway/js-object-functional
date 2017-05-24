@@ -57,7 +57,6 @@ tap.test @ 'Action test', t => ::
 
   class TestObject extends module.ObjectFunctional ::
     asAction = this.someTestAction
-
     someTestAction(testKey, testValue) ::
       t.notStrictEqual(this, obj)
       t.notStrictEqual(this, view1)
@@ -105,7 +104,6 @@ tap.test @ 'Subscribe test', t => ::
 
   class TestObject extends module.ObjectFunctional ::
     asAction = this.someTestAction
-
     someTestAction(testKey, testValue) ::
       t.notStrictEqual(this, obj)
       t.notStrictEqual(this, view1)

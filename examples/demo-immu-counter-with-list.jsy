@@ -1,0 +1,65 @@
+global.Observable = require('zen-observable')
+
+const module = require('../immu')
+
+class CounterWithList extends module.ImmuObjectFunctional ::
+  asAction = this.init
+  init(counter=0) ::
+    this.counter = counter
+    this.lst = @[] counter
+    return this
+
+  asAction = this.increment
+  increment(howHigh=1) ::
+    this.counter += howHigh
+    this.lst = this.lst.concat @ this.counter
+    return this
+
+  asAction = this.decrement
+  decrement(howLow=1) ::
+    this.counter -= howLow
+    this.lst = this.lst.concat @ this.counter
+    return this
+
+  last() ::
+    return this.lst[this.lst.length - 1]
+
+  mutateShouldFail() ::
+    this.lst[1] = 'fail'
+
+
+main()
+function main() ::
+  const ts0 = Date.now()
+  const {inspect} = require('util')
+  function debug(ns) ::
+    const td = Date.now() - ts0
+    const repr = inspect @ ns, {colors: true, depth: null}
+    console.log @ `debug [${td}] :: ${repr}\n`
+
+  ::
+    const host0 = new CounterWithList()
+    debug @: host0
+
+    const view1 = host0.init(42)
+    debug @: last: view1.last(), view1
+
+    view1.subscribe @ update => ::
+      debug @: update
+
+
+    const view2 = view1.increment(10)
+    debug @: last: view2.last(), view2
+
+    const view3 = host0.decrement(20)
+    debug @: last: view3.last(), view3
+
+    try ::
+      view3.mutateShouldFail()
+      console.error("SHOULD NEVER REACH HERE")
+    catch err ::
+      console.log(`Good expected exception: "${err.message}"`)
+
+    console.log()
+    debug @: host0, view1, view2, view3
+    console.log()
