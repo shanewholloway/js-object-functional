@@ -28,6 +28,7 @@ class CounterWithList extends module.ObjectFunctional ::
     this.lst[1] = 'fail'
 
 
+
 main()
 function main() ::
   const ts0 = Date.now()

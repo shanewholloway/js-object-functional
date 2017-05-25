@@ -1,0 +1,72 @@
+const testModule = require('../dist') // require('object-functional')
+
+module.exports = exports = function(tap, options={}) ::
+
+  tap.test @ 'Composed test', t => ::
+
+    class InnerObject extends testModule.ObjectFunctional ::
+      asAction = this.update
+      update(value) ::
+        this.value = value
+
+    class OuterObject extends testModule.ObjectFunctional ::
+      asAction = this.init
+      init() ::
+        this.trackers = {}
+
+      track(key, target) ::
+        target.subscribe @ updatedTarget =>
+          this.updateTracker(key, updatedTarget)
+
+      asAction = this.updateTracker
+      updateTracker(key, updatedTarget) ::
+        this.trackers = @{} ...this.trackers, [key]: updatedTarget || null
+
+
+    const container = new OuterObject()
+
+    container.init()
+
+    let actual_state
+    container.subscribe @ view => ::
+      actual_state = JSON.parse @ JSON.stringify @ view
+
+    t.deepEqual @ actual_state.trackers, {}
+
+    const item_a = new InnerObject()
+    item_a.update @ 'some message'
+    container.track @ 'item_aaa', item_a
+
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'some message'
+
+    const item_b = new InnerObject()
+    container.track @ 'item_bbb', item_b
+
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'some message'
+      , 'item_bbb': null
+
+    item_b.update @ 1942
+
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'some message'
+      , 'item_bbb': @{} value: 1942
+
+    item_a.update @ 'other communication'
+
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'other communication'
+      , 'item_bbb': @{} value: 1942
+
+    item_b.update @ 2042
+
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'other communication'
+      , 'item_bbb': @{} value: 2042
+
+    item_a.update @ 'finally done'
+
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'finally done'
+      , 'item_bbb': @{} value: 2042

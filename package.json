@@ -1,6 +1,6 @@
 {
   "name": "object-functional",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "Object-Functional programming paradigm for JavaScript, including change isolation, observables, and frozen views.",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -36,7 +36,10 @@
     "babel-cli": "^6.24.1",
     "babel-preset-jsy": "^0.7.2",
     "babili": "^0.1.1",
+    "deep-freeze": "^0.0.1",
     "immu": "^3.0.0",
+    "immutable": "^3.8.1",
+    "seamless-immutable": "^7.1.2",
     "tap-lite-tester": "^0.4.0",
     "zen-observable": "^0.5.1"
   },
@@ -61,8 +64,8 @@
     "watch": "npm -s run build:code -- --watch",
     "prepublish": "npm -s run test",
     "pretest": "npm -s run build",
-    "test": "babel-node ./test/test-object-functional.jsy",
-    "shellenv": "export PATH=$PWD/node_modules/.bin:$PATH; cd examples; $SHELL -l",
+    "test": "babel-node ./test/test.jsy",
+    "shellenv": "export PATH=$PWD/node_modules/.bin:$PATH; cd examples; echo 'Run babel-node ./demo-simple-counter.jsy'; $SHELL",
     "example": "babel-node ./example/demo.jsy"
   }
 }

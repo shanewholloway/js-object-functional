@@ -21,6 +21,8 @@ class Counter extends module.ObjectFunctional ::
   mutateShouldFail() ::
     this.counter = 'fail'
 
+
+
 main()
 function main() ::
   const ts0 = Date.now()

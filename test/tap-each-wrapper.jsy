@@ -1,0 +1,79 @@
+
+module.exports = exports = function(tap, WrappedObjectFunctional, options={}) ::
+
+  const checkDeepEqual = options.checkDeepEqual ||
+    @ (t, actual, expected, msg) => t.deepEqual(actual, expected, msg)
+
+  tap.test @ `${WrappedObjectFunctional.name} smoke test`, t => ::
+    class TestObject extends WrappedObjectFunctional ::
+    const obj = new TestObject()
+
+
+  tap.test @ `${WrappedObjectFunctional.name} wrapper test`, t => ::
+    let obj, view1, view2
+
+    class TestObject extends WrappedObjectFunctional ::
+      asAction = this.someTestAction
+      someTestAction(testKey, testValue) ::
+        t.notStrictEqual(this, obj)
+        t.notStrictEqual(this, view1)
+        t.notStrictEqual(this, view2)
+
+        this[testKey] = {testKey, testValue}
+        return this
+
+      plainMethod(testKey, testValue) ::
+        t.throws @
+          () => ::
+            this[testKey] = {testKey, testValue}
+          , 'Should not be able to mutate from outside an action method'
+
+    obj = new TestObject()
+    t.strictEqual(obj.key, undefined)
+
+    obj.plainMethod('failKey', 'some-fail-value')
+
+    view1 = obj.someTestAction('key', 'some-value')
+    t.strictEqual(obj.key, undefined)
+    checkDeepEqual(t, view1.key, {testKey: 'key', testValue: 'some-value'})
+
+    view1.plainMethod('failKey', 'some-fail-value')
+
+    view2 = obj.someTestAction('key', 'some-other-value')
+    t.strictEqual(obj.key, undefined)
+    checkDeepEqual(t, view1.key, {testKey: 'key', testValue: 'some-value'})
+    checkDeepEqual(t, view2.key, {testKey: 'key', testValue: 'some-other-value'})
+
+    view2.plainMethod('failKey', 'some-fail-value')
+
+
+  if options.doesNotSupportMutationExceptions ::
+    tap.skip @ `INCOMPATIBLE: ${WrappedObjectFunctional.name} does not throw mutation exceptions`, testMutationExceptions
+  else ::
+    tap.test @ `${WrappedObjectFunctional.name} mutation exceptions test`, testMutationExceptions
+
+  function testMutationExceptions(t) ::
+    let obj, view1
+
+    class TestObject extends WrappedObjectFunctional ::
+      asAction = this.someTestAction
+      someTestAction(testKey, testValue) ::
+        this[testKey] = {testKey, testValue}
+        return this
+
+    obj = new TestObject()
+    view1 = obj.someTestAction('key', 'some-value')
+
+    t.throws @
+      () => :: obj.someAttr = 2142
+      , 'Should not be able to mutate host attribute'
+
+    t.throws @
+      () => :: view1.someAttr = 1942
+      , 'Should not be able to mutate view attribute'
+
+    t.throws @
+      () => :: view1.key.someNestedAttr = 1942
+      , 'Should not be able to mutate nested attribute'
+
+

@@ -1,0 +1,94 @@
+const testModule = require('../dist') // require('object-functional')
+
+module.exports = exports = function(tap, options={}) ::
+
+  tap.test @ 'Smoke test', t => ::
+    class TestObject extends testModule.ObjectFunctional ::
+
+    const obj = new TestObject()
+
+
+
+  tap.test @ 'Action test', t => ::
+    let obj, view1, view2
+
+    class TestObject extends testModule.ObjectFunctional ::
+      asAction = this.someTestAction
+      someTestAction(testKey, testValue) ::
+        t.notStrictEqual(this, obj)
+        t.notStrictEqual(this, view1)
+        t.notStrictEqual(this, view2)
+
+        this[testKey] = testValue
+        return this
+
+      plainMethod(testKey, testValue) ::
+        t.throws @
+          () => ::
+            this[testKey] = {testKey, testValue}
+          , 'Should not be able to mutate from outside an action method'
+
+    obj = new TestObject()
+    t.strictEqual(obj.key, undefined)
+
+    obj.plainMethod('failKey', 'some-fail-value')
+
+    view1 = obj.someTestAction('key', 'some-value')
+    t.strictEqual(obj.key, undefined)
+    t.strictEqual(view1.key, 'some-value')
+
+    view1.plainMethod('failKey', 'some-fail-value')
+
+    view2 = obj.someTestAction('key', 'some-other-value')
+    t.strictEqual(obj.key, undefined)
+    t.strictEqual(view1.key, 'some-value')
+    t.strictEqual(view2.key, 'some-other-value')
+
+    view2.plainMethod('failKey', 'some-fail-value')
+
+    t.throws @
+      () => :: obj.someAttr = 2142
+      , 'Should not be able to mutate host attribute'
+
+    t.throws @
+      () => :: view2.someAttr = 1942
+      , 'Should not be able to mutate view attribute'
+
+
+
+  tap.test @ 'Subscribe test', t => ::
+    let obj, view1, view2
+
+    class TestObject extends testModule.ObjectFunctional ::
+      asAction = this.someTestAction
+      someTestAction(testKey, testValue) ::
+        t.notStrictEqual(this, obj)
+        t.notStrictEqual(this, view1)
+        t.notStrictEqual(this, view2)
+
+        this[testKey] = testValue
+        return this
+
+    obj = new TestObject()
+
+    const _update_log_ =  []
+    obj.subscribe @:
+        next(view) ::
+          _update_log_.push @ view ? view.key : null
+      , error(err) ::
+          t.fail @ null, err, 'Unexpected error during notification'
+
+    t.strictEqual(obj.key, undefined)
+    t.deepEqual(_update_log_, [null])
+
+    view1 = obj.someTestAction('key', 'some-value')
+    t.strictEqual(obj.key, undefined)
+    t.strictEqual(view1.key, 'some-value')
+    t.deepEqual(_update_log_, [null, 'some-value'])
+
+    view2 = obj.someTestAction('key', 'some-other-value')
+    t.strictEqual(obj.key, undefined)
+    t.strictEqual(view1.key, 'some-value')
+    t.strictEqual(view2.key, 'some-other-value')
+    t.deepEqual(_update_log_, [null, 'some-value', 'some-other-value'])
+

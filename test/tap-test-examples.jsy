@@ -1,0 +1,21 @@
+const {fork} = require('child_process')
+
+module.exports = exports = function(tap, options={}) ::
+
+  const demoList = @[]
+      'demo-simple-counter'
+    , 'demo-counter-with-list'
+    , 'demo-immu-counter-with-list'
+    , 'demo-composed'
+
+  for const demo_name of demoList ::
+    tap.test @ `examples/${demo_name}.jsy`, t => ::
+      const child = fork @ `${__dirname}/../examples/${demo_name}.jsy`
+        , [], @{} silent: true
+
+      return new Promise @ (resolve, reject) => ::
+        child.on @ 'error', reject
+        child.on @ 'exit', code => ::
+          if 0 != code ::
+            return reject(`Example returned failed exit code "${code}"`)
+          else return resolve()

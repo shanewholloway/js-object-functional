@@ -1,0 +1,56 @@
+global.Observable = require('zen-observable')
+
+const module = require('../dist')
+
+
+class InnerObject extends module.ObjectFunctional ::
+  asAction = this.update
+  update(value) ::
+    this.value = value
+
+class OuterObject extends module.ObjectFunctional ::
+  asAction = this.init
+  init() ::
+    this.trackers = {}
+
+  track(key, target) ::
+    target.subscribe @ updatedTarget =>
+      this.updateTracker(key, updatedTarget)
+
+  asAction = this.updateTracker
+  updateTracker(key, updatedTarget) ::
+    this.trackers = @{} ...this.trackers, [key]: updatedTarget || null
+
+
+main()
+function main() ::
+  const ts0 = Date.now()
+  const {inspect} = require('util')
+  function debug(ns) ::
+    const td = Date.now() - ts0
+    const repr = inspect @ ns, {colors: true, depth: null}
+    console.log @ `debug [${td}] :: ${repr}\n`
+
+  ::
+    const container = new OuterObject()
+    container.init()
+
+    container.subscribe @ view => ::
+      const trackers = JSON.parse @ JSON.stringify @ view.trackers
+      debug @: trackers
+
+    const item_a = new InnerObject()
+    item_a.update @ 'some message'
+    container.track @ 'item_aaa', item_a
+
+    const item_b = new InnerObject()
+    container.track @ 'item_bbb', item_b
+
+    item_b.update @ 1942
+
+    item_a.update @ 'other communication'
+
+    item_b.update @ 2042
+
+    item_a.update @ 'finally done'
+

@@ -1,0 +1,35 @@
+const testModule = require('../dist')
+
+module.exports = exports = function(tap, options={}) ::
+
+  tap.test @ 'updateObservable test', t => ::
+    const called = @{} start: 0, next: 0, value: false
+    const expected = @{} start: 1, next: 5, value: 'final'
+
+    t.strictEqual(called.value, false)
+
+    const initial = Symbol('test initial update')
+    const updateFn = testModule.updateObservable({initial})
+    t.strictEqual(called.value, false)
+
+    updateFn.observable.subscribe @:
+        start(subscribe) ::
+          called.start+=1
+      , next(value) ::
+          called.next+=1
+          called.value = value
+      , error(err) ::
+          t.fail @ err, null, 'Should not call error'
+      , complete(value) ::
+          t.fail @ 'Should not call complete'
+
+    t.strictEqual(called.value, initial)
+    updateFn('one')
+    t.strictEqual(called.value, 'one')
+    updateFn('two')
+    t.strictEqual(called.value, 'two')
+    updateFn('three')
+    t.strictEqual(called.value, 'three')
+
+    updateFn('final')
+    t.deepEqual(called, expected)

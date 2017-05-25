@@ -1,0 +1,40 @@
+const wrapperTestSuite = require('./tap-each-wrapper.jsy')
+
+module.exports = exports = function(tap, options={}) ::
+
+  ::
+    const immu_module = require('../immu') // require('object-functional/immu')
+    wrapperTestSuite @ tap, immu_module.ImmuObjectFunctional
+
+
+  ::
+    const immutable = require('immutable')
+    const immutable_module = require('../immutable') // require('object-functional/immutable')
+    wrapperTestSuite @ tap, immutable_module.ImmutableObjectFunctional,
+      @{} doesNotSupportMutationExceptions: true
+        , checkDeepEqual(t, actual, expected, msg) ::
+            t.ok @ immutable.is(actual, immutable.fromJS(expected)), msg
+
+  ::
+    const seamless_module = require('../seamless-immutable') // require('object-functional/seamless-immutable')
+    wrapperTestSuite @ tap, seamless_module.SeamlessImmutableObjectFunctional
+
+
+  ::
+    const deep_freeze_module = require('../deep-freeze') // require('object-functional/deep-freeze')
+    wrapperTestSuite @ tap, deep_freeze_module.DeepFreezeObjectFunctional
+
+
+  ::
+    const frozen_module = require('../frozen') // require('object-functional/frozen')
+    wrapperTestSuite @ tap, frozen_module.FrozenObjectFunctional
+
+
+  ::
+    const json_module = require('../json') // require('object-functional/frozen')
+
+    wrapperTestSuite @ tap, json_module.FrozenJSONObjectFunctional
+
+    wrapperTestSuite @ tap, json_module.JSONObjectFunctional,
+      @{} doesNotSupportMutationExceptions: true
+
