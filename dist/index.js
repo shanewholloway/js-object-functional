@@ -290,7 +290,7 @@ function stateActionDispatch(host, options = {}) {
 
 function asDispatchCallbackPipeline(callback, host_callback, callback_name) {
   if (null != host_callback) {
-    callback = [].conact(callback || [], host_callback);
+    callback = [].concat(host_callback, callback || []);
   } else if (null == callback) {
     return;
   }
