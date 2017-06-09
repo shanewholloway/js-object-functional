@@ -1,0 +1,177 @@
+const {asFunctionalObject, ObjectFunctional, isObjectChanged} = require('../dist') // require('object-functional')
+
+
+module.exports = exports = function(tap, options={}) ::
+
+  tap.test @ `asFunctionalObject options {isChanged()}`, async t => ::
+    const callLog = []
+
+    const TestObject = withOptionsBase @ callLog, @:
+      isChanged(pre_state, post_state, state_summary, ctx) ::
+        callLog.push @: pre_state, post_state, state_summary
+        return isObjectChanged(pre_state, post_state)
+          
+
+    const test_obj = new TestObject().example().example()
+
+    t.equal @ 2, test_obj.called
+
+    t.deepEqual @ callLog, @[]
+        @{} pre_state: {}, post_state: {}, state_summary: undefined
+      , @{} action: "example"
+      , @{} pre_state: {}, post_state: {called: 1}, state_summary: undefined
+      , @{} action: "example"
+      , @{} pre_state: {called:1}, post_state: {called: 2}, state_summary: true
+
+
+  tap.test @ `asFunctionalObject options {before()}`, async t => ::
+    const callLog = []
+
+    const TestObject = withOptionsBase @ callLog, @:
+      before(tgt, ctx) ::
+        callLog.push @: tgt_before: tgt
+
+    const test_obj = new TestObject().example().example()
+
+    t.equal @ 2, test_obj.called
+
+    t.deepEqual @ callLog, @[]
+        @{} tgt_before: @{}
+      , @{} tgt_before: @{} called: 1
+      , @{} action: "example"
+      , @{} tgt_before: @{} called: 2
+      , @{} action: "example"
+
+
+  tap.test @ `asFunctionalObject options {after()}`, async t => ::
+    const callLog = []
+
+    const TestObject = withOptionsBase @ callLog, @:
+      after(tgt, ctx) ::
+        callLog.push @: tgt_after: tgt
+
+    const test_obj = new TestObject().example().example()
+
+    t.equal @ 2, test_obj.called
+
+    t.deepEqual @ callLog, @[]
+        @{} tgt_after: @{}
+      , @{} action: "example"
+      , @{} tgt_after: @{} called: 1
+      , @{} action: "example"
+      , @{} tgt_after: @{} called: 2
+
+
+  tap.test @ `asFunctionalObject options {freeze()}`, async t => ::
+    const callLog = []
+
+    const TestObject = withOptionsBase @ callLog, @:
+      freeze(tgt, ctx) ::
+        callLog.push @: tgt_freeze: tgt
+
+    const test_obj = new TestObject().example().example()
+
+    t.equal @ 2, test_obj.called
+
+    t.deepEqual @ callLog, @[]
+        @{} tgt_freeze: @{}
+      , @{} action: "example"
+      , @{} tgt_freeze: @{} called: 1
+      , @{} action: "example"
+      , @{} tgt_freeze: @{} called: 2
+
+
+  tap.test @ `asFunctionalObject options {error()}`, async t => ::
+    const callLog = []
+
+    const TestObject = withOptionsBase @ callLog, @:
+      error(err, tgt, ctx) ::
+        callLog.push @: tgt_error: tgt, err: err.message
+
+    let test_obj = new TestObject()
+      .example()
+
+    t.throws @ () => ::
+      test_obj = test_obj.raiseError('first')
+
+    test_obj = test_obj.example().example()
+
+    t.throws @ () => ::
+      test_obj = test_obj.raiseError('second')
+
+    test_obj = test_obj.example()
+
+    t.equal @ 4, test_obj.called
+
+    t.deepEqual @ callLog, @[]
+        @{} action: "example"
+      , @{} action: "raiseError", message: "first"
+      , @{} tgt_error: {"called":1}, err: "first"
+      , @{} action: "example"
+      , @{} action: "example"
+      , @{} action: "raiseError", message: "second"
+      , @{} tgt_error: {"called":3}, err: "second"
+      , @{} action: "example"
+
+
+  tap.test @ `asFunctionalObject options {changed()}`, async t => ::
+    const callLog = []
+
+    const TestObject = withOptionsBase @ callLog, @:
+      changed(tgt, ctx) ::
+        callLog.push @: tgt_changed: tgt
+
+    const test_obj = new TestObject()
+      .example()
+      .sync()
+      .example()
+      .example()
+      .sync()
+
+    t.equal @ 3, test_obj.called
+
+    t.deepEqual @ callLog, @[]
+        @{} action: "example"
+      , @{} tgt_changed: @{} called: 1
+      , @{} action: "sync"
+      , @{} action: "example"
+      , @{} tgt_changed: @{} called: 2
+      , @{} action: "example"
+      , @{} tgt_changed: @{} called: 3
+      , @{} action: "sync"
+
+
+
+
+/*
+options.isChanged
+options.before
+options.error
+options.after
+options.changed
+options.freeze
+*/
+
+function withOptionsBase(callLog, options) ::
+  class TestOptionsObjectFunctional ::
+    constructor() ::
+      return asFunctionalObject(this, options)
+
+  class TestObject extends TestOptionsObjectFunctional ::
+    asAction = this.example
+    example() ::
+      callLog.push @: action: 'example'
+      this.called = 1 + @ this.called || 0
+      return this
+
+    asAction = this.sync
+    sync() ::
+      callLog.push @: action: 'sync'
+      return this
+
+    asAction = this.raiseError
+    raiseError(message) ::
+      callLog.push @: action: 'raiseError', message
+      throw new Error(message)
+
+  return TestObject

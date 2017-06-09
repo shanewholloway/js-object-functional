@@ -248,7 +248,7 @@ export function asDispatchCallbackPipeline(callback, host_callback, callback_nam
 
 // ---
 
-export function isObjectChanged(prev, next, state_summary, tgt) ::
+export function isObjectChanged(prev, next) ::
   if prev === undefined ::
     return next !== undefined
 

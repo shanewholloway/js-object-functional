@@ -64,7 +64,8 @@
     "watch": "npm -s run build:code -- --watch",
     "prepublish": "npm -s run test",
     "pretest": "npm -s run build",
-    "test": "babel-node ./test/test.jsy",
+    "test": "npm -s run :test",
+    ":test": "babel-node ./test/test.jsy",
     "shellenv": "export PATH=$PWD/node_modules/.bin:$PATH; cd examples; echo 'Run babel-node ./demo-simple-counter.jsy'; $SHELL",
     "example": "babel-node ./example/demo.jsy"
   }

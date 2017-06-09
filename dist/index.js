@@ -68,7 +68,7 @@ function asFunctionalObject(host, ...options) {
     Object.defineProperties(host, host_props);
   }
 
-  // initialize the dispatch with 
+  // initialize the internal stat with initial view
   dispatchAction(notify);
 
   // return a frozen clone of the host object
@@ -326,7 +326,7 @@ function asDispatchCallbackPipeline(callback, host_callback, callback_name) {
 
 // ---
 
-function isObjectChanged(prev, next, state_summary, tgt) {
+function isObjectChanged(prev, next) {
   if (prev === undefined) {
     return next !== undefined;
   }

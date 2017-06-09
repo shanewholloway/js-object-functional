@@ -7,10 +7,13 @@ const testModule = require('../dist') // require('object-functional')
 const tap = require('tap-lite-tester')
 tap.start()
 
-require('./tap-test-update-observable.jsy') @ tap
-require('./tap-test-basics.jsy') @ tap
-require('./tap-test-composed.jsy') @ tap
-require('./tap-test-wrappers.jsy') @ tap
-require('./tap-test-examples.jsy') @ tap
+if 1 ::
+  require('./tap-test-update-observable.jsy') @ tap
+  require('./tap-test-basics.jsy') @ tap
+  require('./tap-test-composed.jsy') @ tap
+  require('./tap-test-wrappers.jsy') @ tap
+  require('./tap-test-examples.jsy') @ tap
+  require('./tap-test-hooks.jsy') @ tap
+  require('./tap-test-override-hooks.jsy') @ tap
 
 tap.finish()
