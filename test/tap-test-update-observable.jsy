@@ -2,14 +2,13 @@ const testModule = require('../dist')
 
 module.exports = exports = function(tap, options={}) ::
 
-  tap.test @ 'updateObservable test', t => ::
+  tap.test @ 'asObservableUpdateFunction test', t => ::
     const called = @{} start: 0, next: 0, value: false
     const expected = @{} start: 1, next: 5, value: 'final'
 
     t.strictEqual(called.value, false)
 
-    const initial = Symbol('test initial update')
-    const updateFn = testModule.updateObservable({initial})
+    const updateFn = testModule.asObservableUpdateFunction()
     t.strictEqual(called.value, false)
 
     updateFn.observable.subscribe @:
@@ -23,7 +22,7 @@ module.exports = exports = function(tap, options={}) ::
       , complete(value) ::
           t.fail @ 'Should not call complete'
 
-    t.strictEqual(called.value, initial)
+    t.strictEqual(called.value, undefined)
     updateFn('one')
     t.strictEqual(called.value, 'one')
     updateFn('two')

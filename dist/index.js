@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ObjectFunctional = ObjectFunctional;
 exports.asFunctionalObject = asFunctionalObject;
-exports.updateObservable = updateObservable;
+exports.asObservableUpdateFunction = asObservableUpdateFunction;
 exports.stateActionDispatch = stateActionDispatch;
 exports.asDispatchCallbackPipeline = asDispatchCallbackPipeline;
 exports.isObjectChanged = isObjectChanged;
@@ -17,12 +17,13 @@ function ObjectFunctional() {
 // ---
 
 function asFunctionalObject(host, ...options) {
+  const Observable = _findObservable(options.Observable);
   {
     // initialize options
     options = Object.assign({}, ...options);
 
     if (null == options.notify) {
-      options.notify = updateObservable(options);
+      options.notify = asObservableUpdateFunction(Observable);
     }
   }
 
@@ -32,7 +33,6 @@ function asFunctionalObject(host, ...options) {
   const host_props = {}; // properties to overlay on `host` paramter; uses immutable view actions dispatch
   const impl_props = {}; // properties for mutable clones -- where actions use specified implementation
   {
-    const Observable = _findUsableObservable(options);
     const observable = Observable.from(notify.observable || notify);
     if (null == observable || 'function' !== typeof observable.subscribe) {
       throw new TypeError(`Notify option is expected to be ES Observable compatible`);
@@ -42,7 +42,7 @@ function asFunctionalObject(host, ...options) {
   }
 
   // setup asAction setter hack -- in lieu of ES standard decorators
-  const defineAction = bindActionDeclarations(notify);
+  const { dispatchAction, defineAction } = bindActionDeclarations(notify);
   if (options.injectActions) {
     // allow injecting actions for time traveling debugging, etc.
     for (const name of Object.keys(options.injectActions)) {
@@ -67,6 +67,9 @@ function asFunctionalObject(host, ...options) {
 
     Object.defineProperties(host, host_props);
   }
+
+  // initialize the dispatch with 
+  dispatchAction(notify);
 
   // return a frozen clone of the host object
   return Object.freeze(Object.create(host));
@@ -110,15 +113,15 @@ function asFunctionalObject(host, ...options) {
     };
 
     host_props.asAction = { set: defineAction };
-    return defineAction;
+    return { dispatchAction, defineAction };
   }
 }
 
 // ---
 
-function updateObservable(options = {}) {
+function asObservableUpdateFunction(Observable) {
+  Observable = _findObservable(Observable);
   {
-    const Observable = _findUsableObservable(options);
     const observable = new Observable(addObserver);
     update.observable = observable;
     if (Symbol.observable) {
@@ -128,13 +131,16 @@ function updateObservable(options = {}) {
     }
   }
 
-  const _observerColl = [];
-  let current = options.initial;
+  const coll = [];
+  let current;
   return update;
 
   function update(next) {
+    if (current === next) {
+      return;
+    }
     current = next;
-    for (const observer of _observerColl.slice()) {
+    for (const observer of coll.slice()) {
       try {
         observer.next(current);
       } catch (err) {
@@ -145,7 +151,7 @@ function updateObservable(options = {}) {
   }
 
   function addObserver(observer) {
-    _observerColl.push(observer);
+    coll.push(observer);
     observer.next(current);
     return () => {
       removeObserver(observer);
@@ -153,11 +159,11 @@ function updateObservable(options = {}) {
   }
 
   function removeObserver(observer) {
-    const idx = _observerColl.indexOf(observer);
+    const idx = coll.indexOf(observer);
     if (idx < 0) {
       return false;
     }
-    _observerColl.splice(idx, 1);
+    coll.splice(idx, 1);
     return true;
   }
 }
@@ -187,35 +193,20 @@ function stateActionDispatch(host, options = {}) {
     throw new TypeError(`Dispatch expected 'isChanged' option to be a function instance`);
   }
 
-  let initialState = options.initialState;
-  if ('function' !== typeof initialState) {
-    if ('function' === typeof host.initState) {
-      initialState = host => host.initState();
-    } else {
-      const _init_state = Object.assign({}, initialState);
-      initialState = host => _init_state;
-    }
-  }
-
-  let state = undefined,
+  let state = {},
       state_summary,
       tip_view;
   return __dispatch__;
 
   function __dispatch__(notify, actionName, actionArgs, view) {
-    let change_summary;
-    if (undefined === state) {
-      state = initialState(host);
-      change_summary = true;
-    }
-
     const pre_state = state;
     const tgt = Object.create(host.__impl_proto__());
-    Object.assign(tgt, pre_state);
+
+    Object.assign(tgt, state);
 
     let result;
     const ctx = { action: [actionName, actionArgs, view],
-      pre_state, isTipView: tip_view === view };
+      pre_state, isTipView: tip_view === view && view !== undefined };
 
     try {
       if (undefined !== on_before) {
@@ -224,8 +215,16 @@ function stateActionDispatch(host, options = {}) {
 
       try {
         // dispatch action method
-        result = tgt[actionName].apply(tgt, actionArgs);
-        ctx.result = result;
+        if (actionName) {
+          result = tgt[actionName].apply(tgt, actionArgs);
+          ctx.result = result;
+        } else {
+          if (undefined === tip_view) {
+            tip_view = tgt;
+          }
+          ctx.result = result = tgt;
+        }
+
         // transform from impl down to a view
         Object.setPrototypeOf(tgt, host.__view_proto__());
       } catch (err) {
@@ -255,9 +254,9 @@ function stateActionDispatch(host, options = {}) {
         throw new Error(`Async conflicting update of "${host.constructor.name}" occured`);
       }
 
-      change_summary = isChanged(pre_state, post_state, state_summary, ctx);
-      ctx.changed = !!change_summary;
+      const change_summary = isChanged(pre_state, post_state, state_summary, ctx);
       if (change_summary) {
+        ctx.changed = true;
         state = post_state;
         state_summary = change_summary;
         tip_view = tgt;
@@ -279,9 +278,7 @@ function stateActionDispatch(host, options = {}) {
       Object.freeze(tgt);
     }
 
-    if (change_summary) {
-      notify(tgt);
-    }
+    notify(tgt);
     return result;
   }
 }
@@ -330,6 +327,10 @@ function asDispatchCallbackPipeline(callback, host_callback, callback_name) {
 // ---
 
 function isObjectChanged(prev, next, state_summary, tgt) {
+  if (prev === undefined) {
+    return next !== undefined;
+  }
+
   for (const key of Object.keys(next)) {
     if (!(key in prev)) {
       return true; // added
@@ -359,17 +360,17 @@ function bindStateTransform(xform, xform_name) {
 
 // ---
 
-function _findUsableObservable(options) {
-  if (undefined !== options.Observable) {
-    return options.Observable;
+function _findObservable(Observable) {
+  if ('function' === typeof Observable) {
+    return Observable;
   }
-  if (undefined !== asFunctionalObject.Observable) {
+  if ('function' === typeof asFunctionalObject.Observable) {
     return asFunctionalObject.Observable;
   }
-  if ('undefined' !== typeof window && undefined !== window.Observable) {
+  if ('undefined' !== typeof window && 'function' === typeof window.Observable) {
     return window.Observable;
   }
-  if ('undefined' !== typeof global && undefined !== global.Observable) {
+  if ('undefined' !== typeof global && 'function' === typeof global.Observable) {
     return global.Observable;
   }
   throw new TypeError(`Unable to locate an ES Observable implementation`);

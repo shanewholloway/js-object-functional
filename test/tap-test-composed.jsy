@@ -25,12 +25,15 @@ module.exports = exports = function(tap, options={}) ::
 
     const container = new OuterObject()
 
-    container.init()
-
     let actual_state
     container.subscribe @ view => ::
+      t.notEqual @ undefined, view
+      t.notEqual @ null, view
       actual_state = JSON.parse @ JSON.stringify @ view
 
+
+    t.strictEqual @ actual_state.trackers, undefined
+    container.init()
     t.deepEqual @ actual_state.trackers, {}
 
     const item_a = new InnerObject()
@@ -45,7 +48,7 @@ module.exports = exports = function(tap, options={}) ::
 
     t.deepEqual @ actual_state.trackers, @{}
         'item_aaa': @{} value: 'some message'
-      , 'item_bbb': null
+      , 'item_bbb': {}
 
     item_b.update @ 1942
 
