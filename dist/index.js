@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ObjectFunctional = ObjectFunctional;
 exports.asFunctionalObject = asFunctionalObject;
-exports.asObservableUpdateFunction = asObservableUpdateFunction;
+exports.bindUpdateFunction = bindUpdateFunction;
 exports.stateActionDispatch = stateActionDispatch;
 exports.asDispatchCallbackPipeline = asDispatchCallbackPipeline;
 exports.isObjectChanged = isObjectChanged;
@@ -17,71 +17,30 @@ function ObjectFunctional() {
 // ---
 
 function asFunctionalObject(host, ...options) {
-  const Observable = _findObservable(options.Observable);
-  {
-    // initialize options
-    options = Object.assign({}, ...options);
-
-    if (null == options.notify) {
-      options.notify = asObservableUpdateFunction(Observable);
-    }
-  }
-
-  // setup notification, observable, and props
-  const notify = options.notify;
-  const view_props = {}; // properties for immutable views -- where actions are grafted on
-  const host_props = {}; // properties to overlay on `host` paramter; uses immutable view actions dispatch
-  const impl_props = {}; // properties for mutable clones -- where actions use specified implementation
-  {
-    const observable = Observable.from(notify.observable || notify);
-    if (null == observable || 'function' !== typeof observable.subscribe) {
-      throw new TypeError(`Notify option is expected to be ES Observable compatible`);
-    }
-
-    bindObservable(observable);
-  }
+  // initialize options
+  options = Object.assign({}, ...options);
+  const notify = null == options.notify ? bindUpdateFunction(host, options) : options.notify;
 
   // setup asAction setter hack -- in lieu of ES standard decorators
   const { dispatchAction, defineAction } = bindActionDeclarations(notify);
-  if (options.injectActions) {
-    // allow injecting actions for time traveling debugging, etc.
-    for (const name of Object.keys(options.injectActions)) {
-      const fnActionImpl = options.injectActions[name];
-      if ('function' !== typeof fnActionImpl) {
-        throw TypeError(`Overlay action "${name}" expected as function, not "${typeof fnActionImpl}"`);
-      }
-
-      defineAction([name, fnActionImpl]);
-    }
+  if (options.actions) {
+    defineAction(options.actions);
   }
 
-  const __impl_proto__ = Object.create(Object.getPrototypeOf(host), impl_props);
-  const __view_proto__ = Object.create(Object.getPrototypeOf(host), view_props);
-  {
-    // view/impl prototype definitions and host prototype update 
-    host_props.__impl_proto__ = { configurable: true, value: __impl_proto__ };
-    host_props.__view_proto__ = { configurable: true, value: __view_proto__ };
+  const subscribe = { value(cb) {
+      return notify.subscribe(cb);
+    } };
+  const __impl_proto__ = Object.create(Object.getPrototypeOf(host), { subscribe });
+  const __view_proto__ = Object.create(Object.getPrototypeOf(host), { subscribe });
 
-    Object.defineProperties(host, host_props);
-  }
+  Object.defineProperties(host, {
+    subscribe, asAction: { set: defineAction }, __impl_proto__: { configurable: true, value: __impl_proto__ }, __view_proto__: { configurable: true, value: __view_proto__ } });
 
   // initialize the internal stat with initial view
   dispatchAction(notify, null, [], null);
 
   // return a frozen clone of the host object
   return Object.freeze(Object.create(host));
-
-  function bindObservable(observable) {
-    for (const props of [view_props, host_props, impl_props]) {
-      props.subscribe = { value: observable.subscribe.bind(observable) };
-      props.observable = { value() {
-          return observable;
-        } };
-      if (null != Symbol.observable) {
-        props[Symbol.observable] = props.observable;
-      }
-    }
-  }
 
   function bindActionDeclarations(notify) {
     let dispatchAction;
@@ -134,59 +93,54 @@ function asFunctionalObject(host, ...options) {
       Object.defineProperties(host, host_props);
     };
 
-    host_props.asAction = { set: defineAction };
     return { dispatchAction, defineAction };
   }
 }
 
 // ---
 
-function asObservableUpdateFunction(Observable) {
-  Observable = _findObservable(Observable);
-  {
-    const observable = new Observable(addObserver);
-    update.observable = observable;
-    if (Symbol.observable) {
-      Object.defineProperty(update, Symbol.observable, { value() {
-          return observable;
-        } });
-    }
-  }
-
-  const coll = [];
+function bindUpdateFunction() {
+  let notifyList = [];
   let current;
+
+  update.subscribe = subscribe;
   return update;
 
   function update(next) {
     if (current === next) {
       return;
     }
+
     current = next;
-    for (const observer of coll.slice()) {
+    for (const cb of notifyList) {
       try {
-        observer.next(current);
+        cb(current);
       } catch (err) {
-        removeObserver(observer);
-        observer.error(err);
+        discard(cb);
       }
     }
   }
 
-  function addObserver(observer) {
-    coll.push(observer);
-    observer.next(current);
-    return () => {
-      removeObserver(observer);
-    };
+  function subscribe(callback) {
+    if (-1 !== notifyList.indexOf(callback)) {
+      return;
+    }
+    if ('function' !== typeof callback) {
+      throw new TypeError(`Please subscribe with a function`);
+    }
+
+    notifyList = notifyList.concat([callback]);
+    callback(current);
+    unsubscribe.unsubscribe = unsubscribe;
+    return unsubscribe;
+
+    function unsubscribe() {
+      discard(callback);
+    }
   }
 
-  function removeObserver(observer) {
-    const idx = coll.indexOf(observer);
-    if (idx < 0) {
-      return false;
-    }
-    coll.splice(idx, 1);
-    return true;
+  function discard(callback) {
+    notifyList = notifyList.filter(e => callback !== e);
   }
 }
 
@@ -375,23 +329,5 @@ function bindStateTransform(xform, xform_name) {
       tgt[key] = xform(tgt[key]);
     }
   };
-}
-
-// ---
-
-function _findObservable(Observable) {
-  if ('function' === typeof Observable) {
-    return Observable;
-  }
-  if ('function' === typeof asFunctionalObject.Observable) {
-    return asFunctionalObject.Observable;
-  }
-  if ('undefined' !== typeof window && 'function' === typeof window.Observable) {
-    return window.Observable;
-  }
-  if ('undefined' !== typeof global && 'function' === typeof global.Observable) {
-    return global.Observable;
-  }
-  throw new TypeError(`Unable to locate an ES Observable implementation`);
 }
 //# sourceMappingURL=index.js.map

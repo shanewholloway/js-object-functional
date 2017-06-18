@@ -1,14 +1,11 @@
 require('source-map-support').install()
 
-global.Observable = require('zen-observable')
-
 const testModule = require('../dist') // require('object-functional')
 
 const tap = require('tap-lite-tester')
 tap.start()
 
 if 1 ::
-  require('./tap-test-update-observable.jsy') @ tap
   require('./tap-test-basics.jsy') @ tap
   require('./tap-test-basics-by-name.jsy') @ tap
   require('./tap-test-composed.jsy') @ tap

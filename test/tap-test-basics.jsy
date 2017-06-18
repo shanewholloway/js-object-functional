@@ -72,11 +72,8 @@ module.exports = exports = function(tap, options={}) ::
     obj = new TestObject()
 
     const _update_log_ =  []
-    obj.subscribe @:
-        next(view) ::
-          _update_log_.push @ view ? view.key : null
-      , error(err) ::
-          t.fail @ null, err, 'Unexpected error during notification'
+    obj.subscribe @ view => ::
+      _update_log_.push @ view ? view.key : null
 
     t.strictEqual(obj.key, undefined)
     t.deepEqual(_update_log_, [null])
