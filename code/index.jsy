@@ -33,7 +33,7 @@ export function asFunctionalObject(host, ...options) ::
       if 'function' !== typeof fnActionImpl ::
         throw TypeError @ `Overlay action "${name}" expected as function, not "${typeof fnActionImpl}"`
 
-      defineAction({name}, fnActionImpl)
+      defineAction([name, fnActionImpl])
 
 
   :: // view/impl prototype definitions and host prototype update 
@@ -72,15 +72,31 @@ export function asFunctionalObject(host, ...options) ::
       dispatchAction = stateActionDispatch(host, options)
 
 
-    const defineAction = (action, fnActionImpl) => ::
-      const actionName = action.name
-      const fnActionDispatch = function (...actionArgs) ::
-        return dispatchAction(notify, actionName, actionArgs, this)
+    const defineAction = (actionList) => ::
+      if 'function' === typeof actionList ::
+        actionList = @[] @[] actionList.name, actionList
 
-      impl_props[actionName] = @{} value: fnActionImpl || action
-      view_props[actionName] = @{} value: fnActionDispatch
-      Object.defineProperty @ host, actionName,
-        @{} configurable: true, value: fnActionDispatch
+      else if 'string' === typeof actionList ::
+        actionList = @[] @[] actionList, host[actionList]
+
+      else if ! Array.isArray @ actionList ::
+        actionList = Object.entries(actionList)
+
+      const host_props = {}
+      for const [actionName, fnAction] of actionList ::
+        if ! actionName ::
+          throw new TypeError @ `Action name not found`
+        if 'function' !== typeof fnAction ::
+          throw new TypeError @ `Expected action "${actionName}" to be a function, but found "${typeof fnAction}"`
+
+        const fnDispatch = function (...actionArgs) ::
+          return dispatchAction(notify, actionName, actionArgs, this)
+
+        impl_props[actionName] = @{} value: fnAction
+        view_props[actionName] = @{} value: fnDispatch
+        host_props[actionName] = @{} value: fnDispatch, configurable: true
+
+      Object.defineProperties @ host, host_props
 
     host_props.asAction = @{} set: defineAction
     return @{} dispatchAction, defineAction
