@@ -55,21 +55,18 @@ function asFunctionalObject(host, ...options) {
     }
   }
 
+  const __impl_proto__ = Object.create(Object.getPrototypeOf(host), impl_props);
+  const __view_proto__ = Object.create(Object.getPrototypeOf(host), view_props);
   {
     // view/impl prototype definitions and host prototype update 
-    host_props.__impl_proto__ = { value() {
-        return Object.create(Object.getPrototypeOf(host), impl_props);
-      } };
-
-    host_props.__view_proto__ = { value() {
-        return Object.create(Object.getPrototypeOf(host), view_props);
-      } };
+    host_props.__impl_proto__ = { configurable: true, value: __impl_proto__ };
+    host_props.__view_proto__ = { configurable: true, value: __view_proto__ };
 
     Object.defineProperties(host, host_props);
   }
 
   // initialize the internal stat with initial view
-  dispatchAction(notify);
+  dispatchAction(notify, null, [], null);
 
   // return a frozen clone of the host object
   return Object.freeze(Object.create(host));
@@ -108,9 +105,13 @@ function asFunctionalObject(host, ...options) {
         actionList = [[actionList, host[actionList]]];
       } else if (!Array.isArray(actionList)) {
         actionList = Object.entries(actionList);
+      } else if ('string' === typeof actionList[0]) {
+        actionList = [actionList];
       }
 
-      const host_props = {};
+      const impl_props = {},
+            view_props = {},
+            host_props = {};
       for (const [actionName, fnAction] of actionList) {
         if (!actionName) {
           throw new TypeError(`Action name not found`);
@@ -120,7 +121,7 @@ function asFunctionalObject(host, ...options) {
         }
 
         const fnDispatch = function (...actionArgs) {
-          return dispatchAction(notify, actionName, actionArgs, this);
+          return dispatchAction(notify, actionName, actionArgs);
         };
 
         impl_props[actionName] = { value: fnAction };
@@ -128,6 +129,8 @@ function asFunctionalObject(host, ...options) {
         host_props[actionName] = { value: fnDispatch, configurable: true };
       }
 
+      Object.defineProperties(__impl_proto__, impl_props);
+      Object.defineProperties(__view_proto__, view_props);
       Object.defineProperties(host, host_props);
     };
 
@@ -219,7 +222,7 @@ function stateActionDispatch(host, options = {}) {
 
   function __dispatch__(notify, actionName, actionArgs, view) {
     const pre_state = state;
-    const tgt = Object.create(host.__impl_proto__());
+    const tgt = Object.create(host.__impl_proto__);
 
     Object.assign(tgt, state);
 
@@ -238,17 +241,14 @@ function stateActionDispatch(host, options = {}) {
           result = tgt[actionName].apply(tgt, actionArgs);
           ctx.result = result;
         } else {
-          if (undefined === tip_view) {
-            tip_view = tgt;
-          }
-          ctx.result = result = tgt;
+          ctx.result = result = tip_view = tgt;
         }
 
         // transform from impl down to a view
-        Object.setPrototypeOf(tgt, host.__view_proto__());
+        Object.setPrototypeOf(tgt, host.__view_proto__);
       } catch (err) {
         // transform from impl down to a view
-        Object.setPrototypeOf(tgt, host.__view_proto__());
+        Object.setPrototypeOf(tgt, host.__view_proto__);
 
         // handle error from action method
         if (undefined === on_error) {
@@ -297,7 +297,7 @@ function stateActionDispatch(host, options = {}) {
       Object.freeze(tgt);
     }
 
-    notify(tgt);
+    notify(tip_view);
     return result;
   }
 }
