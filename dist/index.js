@@ -27,8 +27,8 @@ function asFunctionalObject(host, ...options) {
     defineAction(options.actions);
   }
 
-  const subscribe = { value(cb) {
-      return notify.subscribe(cb);
+  const subscribe = { value(...args) {
+      return notify.subscribe(...args);
     } };
   const __impl_proto__ = Object.create(Object.getPrototypeOf(host), { subscribe });
   const __view_proto__ = Object.create(Object.getPrototypeOf(host), { subscribe });
@@ -121,7 +121,10 @@ function bindUpdateFunction() {
     }
   }
 
-  function subscribe(callback) {
+  function subscribe(...args) {
+    const callback = args.pop();
+    const skipInitialCall = args[0];
+
     if (-1 !== notifyList.indexOf(callback)) {
       return;
     }
@@ -130,7 +133,9 @@ function bindUpdateFunction() {
     }
 
     notifyList = notifyList.concat([callback]);
-    callback(current);
+    if (!skipInitialCall) {
+      callback(current);
+    }
     unsubscribe.unsubscribe = unsubscribe;
     return unsubscribe;
 
