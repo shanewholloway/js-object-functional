@@ -154,12 +154,12 @@ function bindUpdateFunction() {
 
 function stateActionDispatch(host, options = {}) {
   if (options.transform) {
-    const xform = bindStateTransform(options.transform, 'transform');
+    const xform = bindStateTransform(options.transform, 'transform', options.transformFilter);
     options.after = [].concat(options.after || [], xform);
   }
 
   if (options.viewTransform) {
-    const xform = bindStateTransform(options.viewTransform, 'viewTransform');
+    const xform = bindStateTransform(options.viewTransform, 'viewTransform', options.viewTransformFilter);
     options.changed = [].concat(options.changed || [], xform);
   }
 
@@ -324,14 +324,21 @@ function isObjectChanged(prev, next) {
 
 // ---
 
-function bindStateTransform(xform, xform_name) {
+function bindStateTransform(xform, xform_name, xform_filter) {
   if ('function' !== typeof xform) {
     throw new TypeError(`Expected ${xform_name}to be a function`);
   }
 
+  if (true === xform_filter || 'not-frozen') {
+    xform_filter = attr => !Object.isFrozen(attr);
+  }
+
   return function (tgt) {
     for (const key of Object.keys(tgt)) {
-      tgt[key] = xform(tgt[key]);
+      const attr = tgt[key];
+      if (!xform_filter || xform_filter(attr, key)) {
+        tgt[key] = xform(attr);
+      }
     }
   };
 }

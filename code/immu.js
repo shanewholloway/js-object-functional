@@ -2,7 +2,7 @@ const immu = require('immu')
 const {asFunctionalObject} = require('./index')
 
 function asImmuFunctionalObject(host, ...options) ::
-  return asFunctionalObject @ host, {transform: immu}, ...options
+  return asFunctionalObject @ host, {transform: immu, transformFilter: true}, ...options
 
 function ImmuObjectFunctional() ::
   return asImmuFunctionalObject(this)
