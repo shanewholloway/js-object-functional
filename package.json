@@ -39,7 +39,8 @@
     "immu": "^3.0.0",
     "immutable": "^3.8.1",
     "seamless-immutable": "^7.1.2",
-    "tap-lite-tester": "^0.4.0"
+    "tap-lite-tester": "^0.4.0",
+    "zen-observable": "^0.6.0"
   },
   "babel": {
     "presets": [

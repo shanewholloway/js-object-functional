@@ -1420,10 +1420,6 @@ ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
 
-mute@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/mute/-/mute-2.0.6.tgz#8bf10f1f285ea38c9db2630bff675c114c973ed5"
-
 nan@^2.3.0:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.6.2.tgz#e4ff34e6c95fdfb5aecc08de6596f43605a7db45"
@@ -1856,6 +1852,6 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
 
-zen-observable@^0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/zen-observable/-/zen-observable-0.5.1.tgz#a2a57908a276b569504f42fdf2fa2f643bc02d72"
+zen-observable@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/zen-observable/-/zen-observable-0.6.0.tgz#8a6157ed15348d185d948cfc4a59d90a2c0f70ee"
