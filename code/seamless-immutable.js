@@ -7,6 +7,6 @@ function asSeamlessImmutableFunctionalObject(host, ...options) ::
 function SeamlessImmutableObjectFunctional() ::
   return asSeamlessImmutableFunctionalObject(this)
 
-Object.assign @ exports,
-  @{} asSeamlessImmutableFunctionalObject, asSeamlessFunctionalObject: asSeamlessImmutableFunctionalObject
-    , SeamlessImmutableObjectFunctional, SeamlessObjectFunctional: SeamlessImmutableObjectFunctional
+Object.assign @ exports, @{}
+  asSeamlessImmutableFunctionalObject, asSeamlessFunctionalObject: asSeamlessImmutableFunctionalObject
+  SeamlessImmutableObjectFunctional, SeamlessObjectFunctional: SeamlessImmutableObjectFunctional

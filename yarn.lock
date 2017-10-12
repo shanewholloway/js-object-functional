@@ -356,9 +356,9 @@ babel-plugin-minify-type-constructors@^0.1.1:
   dependencies:
     babel-helper-is-void-0 "^0.1.1"
 
-babel-plugin-offside-js@^0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-offside-js/-/babel-plugin-offside-js-0.7.1.tgz#74494f6f35179b6f00042ea701f990b1294f13be"
+babel-plugin-offside-js@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/babel-plugin-offside-js/-/babel-plugin-offside-js-0.9.0.tgz#0f5b98ecbe4de0ee9c5b44ae892492fd67c11543"
 
 babel-plugin-syntax-async-functions@^6.8.0:
   version "6.13.0"
@@ -685,9 +685,9 @@ babel-preset-babili@^0.1.1:
     babel-plugin-transform-undefined-to-void "^6.8.2"
     lodash.isplainobject "^4.0.6"
 
-babel-preset-env@^1.5.1:
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/babel-preset-env/-/babel-preset-env-1.5.1.tgz#d2eca6af179edf27cdc305a84820f601b456dd0b"
+babel-preset-env@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/babel-preset-env/-/babel-preset-env-1.6.0.tgz#2de1c782a780a0a5d605d199c957596da43c44e4"
   dependencies:
     babel-plugin-check-es2015-constants "^6.22.0"
     babel-plugin-syntax-trailing-function-commas "^6.22.0"
@@ -720,14 +720,14 @@ babel-preset-env@^1.5.1:
     invariant "^2.2.2"
     semver "^5.3.0"
 
-babel-preset-jsy@^0.7.2:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/babel-preset-jsy/-/babel-preset-jsy-0.7.2.tgz#5964ede5331d230a82006b15d4b17bad5752d1b2"
+babel-preset-jsy@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/babel-preset-jsy/-/babel-preset-jsy-0.9.0.tgz#29839ae51ba1aeb31481e76f08d1a20c115bcaef"
   dependencies:
-    babel-plugin-offside-js "^0.7.1"
+    babel-plugin-offside-js "^0.9.0"
     babel-plugin-transform-async-generator-functions "^6.24.1"
     babel-plugin-transform-class-properties "^6.24.1"
-    babel-preset-env "^1.5.1"
+    babel-preset-env "^1.6.0"
     babel-preset-stage-3 "^6.24.1"
 
 babel-preset-stage-3@^6.24.1:

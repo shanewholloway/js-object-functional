@@ -18,6 +18,6 @@ function asFrozenJSONFunctionalObject(host, ...options) ::
 function FrozenJSONObjectFunctional() ::
   return asFrozenJSONFunctionalObject(this)
 
-Object.assign @ exports,
-  @{} asJSONFunctionalObject, JSONObjectFunctional, json_pipe
-    , asFrozenJSONFunctionalObject, FrozenJSONObjectFunctional, frozen_json_pipe
+Object.assign @ exports, @{}
+  asJSONFunctionalObject, JSONObjectFunctional, json_pipe
+  asFrozenJSONFunctionalObject, FrozenJSONObjectFunctional, frozen_json_pipe

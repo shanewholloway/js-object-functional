@@ -34,7 +34,9 @@ function asFunctionalObject(host, ...options) {
   const __view_proto__ = Object.create(Object.getPrototypeOf(host), { subscribe });
 
   Object.defineProperties(host, {
-    subscribe, asAction: { set: defineAction }, __impl_proto__: { configurable: true, value: __impl_proto__ }, __view_proto__: { configurable: true, value: __view_proto__ } });
+    subscribe, asAction: { set: defineAction },
+    __impl_proto__: { configurable: true, value: __impl_proto__ },
+    __view_proto__: { configurable: true, value: __view_proto__ } });
 
   // initialize the internal stat with initial view
   dispatchAction(notify, null, [], null);

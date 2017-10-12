@@ -21,9 +21,9 @@ export function asFunctionalObject(host, ...options) ::
   const __view_proto__ = Object.create @ Object.getPrototypeOf(host), @{} subscribe
 
   Object.defineProperties @ host, @{}
-      subscribe, asAction: @{} set: defineAction
-    , __impl_proto__: @{} configurable: true, value: __impl_proto__
-    , __view_proto__: @{} configurable: true, value: __view_proto__
+    subscribe, asAction: @{} set: defineAction
+    __impl_proto__: @{} configurable: true, value: __impl_proto__
+    __view_proto__: @{} configurable: true, value: __view_proto__
 
 
   // initialize the internal stat with initial view
@@ -150,7 +150,7 @@ export function stateActionDispatch(host, options={}) ::
 
     let result
     const ctx = @: action: [actionName, actionArgs, view]
-      , pre_state, isTipView: tip_view === view && view !== undefined
+      pre_state, isTipView: tip_view === view && view !== undefined
 
     try ::
       if undefined !== on_before ::
