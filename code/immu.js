@@ -1,11 +1,9 @@
-const immu = require('immu')
-const {asFunctionalObject} = require('./index')
+import immu from 'immu'
+import {asFunctionalObject} from './index.jsy'
 
-function asImmuFunctionalObject(host, ...options) ::
+export function asImmuFunctionalObject(host, ...options) ::
   return asFunctionalObject @ host, {transform: immu, transformFilter: true}, ...options
 
-function ImmuObjectFunctional() ::
+export function ImmuObjectFunctional() ::
   return asImmuFunctionalObject(this)
 
-Object.assign @ exports,
-  @{} asImmuFunctionalObject, ImmuObjectFunctional

@@ -1,11 +1,9 @@
-const deepFreeze = require('deep-freeze')
-const {asFunctionalObject} = require('./index')
+import deepFreeze from 'deep-freeze'
+import {asFunctionalObject} from './index.jsy'
 
-function asDeepFreezeFunctionalObject(host, ...options) ::
+export function asDeepFreezeFunctionalObject(host, ...options) ::
   return asFunctionalObject @ host, {transform: deepFreeze, transformFilter: true}, ...options
 
-function DeepFreezeObjectFunctional() ::
+export function DeepFreezeObjectFunctional() ::
   return asDeepFreezeFunctionalObject(this)
 
-Object.assign @ exports,
-  @{} asDeepFreezeFunctionalObject, DeepFreezeObjectFunctional

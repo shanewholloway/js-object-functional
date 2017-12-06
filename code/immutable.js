@@ -1,11 +1,9 @@
 import {fromJS} from 'Immutable'
-import {asFunctionalObject} from './index'
+import {asFunctionalObject} from './index.jsy'
 
-function asImmutableFunctionalObject(host, ...options) ::
+export function asImmutableFunctionalObject(host, ...options) ::
   return asFunctionalObject @ host, {transform: fromJS, transformFilter: true}, ...options
 
-function ImmutableObjectFunctional() ::
+export function ImmutableObjectFunctional() ::
   return asImmutableFunctionalObject(this)
 
-Object.assign @ exports,
-  @{} asImmutableFunctionalObject, ImmutableObjectFunctional

@@ -1,12 +1,9 @@
-const Seamless = require('seamless-immutable')
-const {asFunctionalObject} = require('./index')
+import Seamless from 'seamless-immutable'
+import {asFunctionalObject} from './index.jsy'
 
-function asSeamlessImmutableFunctionalObject(host, ...options) ::
+export function asSeamlessImmutableFunctionalObject(host, ...options) ::
   return asFunctionalObject @ host, {transform: Seamless, transformfilter: true}, ...options
 
-function SeamlessImmutableObjectFunctional() ::
+export function SeamlessImmutableObjectFunctional() ::
   return asSeamlessImmutableFunctionalObject(this)
 
-Object.assign @ exports, @{}
-  asSeamlessImmutableFunctionalObject, asSeamlessFunctionalObject: asSeamlessImmutableFunctionalObject
-  SeamlessImmutableObjectFunctional, SeamlessObjectFunctional: SeamlessImmutableObjectFunctional

@@ -1,10 +1,8 @@
-const {asFunctionalObject} = require('./index')
+import {asFunctionalObject} from './index.jsy'
 
-function asFrozenFunctionalObject(host, ...options) ::
+export function asFrozenFunctionalObject(host, ...options) ::
   return asFunctionalObject @ host, {transform: Object.freeze, transformFilter: true}, ...options
 
-function FrozenObjectFunctional() ::
+export function FrozenObjectFunctional() ::
   return asFrozenFunctionalObject(this)
 
-Object.assign @ exports,
-  @{} asFrozenFunctionalObject, FrozenObjectFunctional
