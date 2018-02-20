@@ -1,6 +1,6 @@
 global.Observable = require('zen-observable')
 
-const module = require('../dist')
+const module = require('..')
 
 
 class InnerObject extends module.ObjectFunctional ::

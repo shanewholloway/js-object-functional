@@ -1,4 +1,4 @@
-const testModule = require('../dist') // require('object-functional')
+const testModule = require('..') // require('object-functional')
 
 module.exports = exports = function(tap, options={}) ::
 

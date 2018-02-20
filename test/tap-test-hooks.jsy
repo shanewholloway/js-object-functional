@@ -1,4 +1,4 @@
-const {asFunctionalObject, ObjectFunctional, isObjectChanged} = require('../dist') // require('object-functional')
+const {asFunctionalObject, ObjectFunctional, isObjectChanged} = require('..') // require('object-functional')
 
 
 module.exports = exports = function(tap, options={}) ::

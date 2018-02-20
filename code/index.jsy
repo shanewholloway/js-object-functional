@@ -3,6 +3,7 @@ export function ObjectFunctional() ::
 
 // ---
 
+export default asFunctionalObject
 export function asFunctionalObject(host, ...options) ::
   // initialize options
   options = Object.assign({}, ...options)
@@ -20,6 +21,7 @@ export function asFunctionalObject(host, ...options) ::
   const __impl_proto__ = Object.create @ Object.getPrototypeOf(host), @{} subscribe
   const __view_proto__ = Object.create @ Object.getPrototypeOf(host), @{} subscribe
 
+  let tip_asAction = host.asAction
   Object.defineProperties @ host, @{}
     subscribe, asAction: @{} set: defineAction
     __impl_proto__: @{} configurable: true, value: __impl_proto__
@@ -28,6 +30,10 @@ export function asFunctionalObject(host, ...options) ::
 
   // initialize the internal stat with initial view
   dispatchAction(notify, null, [], null)
+
+  if null != tip_asAction ::
+    host.asAction = tip_asAction
+    tip_asAction = null
 
   // return a frozen clone of the host object
   return Object.freeze @ Object.create @ host

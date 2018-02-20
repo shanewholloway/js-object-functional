@@ -8,6 +8,13 @@ yarn-error.log*
 node_modules/
 .npm
 
+package-lock.json
+yarn.lock
+dist/
+esm/
+cjs/
+umd/
+
 # Output of 'npm pack'
 *.tgz
 

@@ -1,6 +1,6 @@
 global.Observable = require('zen-observable')
 
-const module = require('../immu')
+const module = require('../cjs/immu')
 
 class CounterWithList extends module.ImmuObjectFunctional ::
   asAction = this.init
