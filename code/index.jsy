@@ -5,6 +5,10 @@ export function ObjectFunctional() ::
 
 export default asFunctionalObject
 export function asFunctionalObject(host, ...options) ::
+  let tip_asAction = host.asAction
+  const proto_host = host
+  host = Object.create(proto_host)
+
   // initialize options
   options = Object.assign({}, ...options)
   const notify = null == options.notify
@@ -18,10 +22,9 @@ export function asFunctionalObject(host, ...options) ::
   if options.actions :: defineAction(options.actions)
 
   const subscribe = @{} value(...args) :: return notify.subscribe(...args)
-  const __impl_proto__ = Object.create @ Object.getPrototypeOf(host), @{} subscribe
-  const __view_proto__ = Object.create @ Object.getPrototypeOf(host), @{} subscribe
+  const __impl_proto__ = Object.create @ proto_host, @{} subscribe
+  const __view_proto__ = Object.create @ proto_host, @{} subscribe
 
-  let tip_asAction = host.asAction
   Object.defineProperties @ host, @{}
     subscribe, asAction: @{} set: defineAction
     __impl_proto__: @{} configurable: true, value: __impl_proto__
