@@ -1,0 +1,41 @@
+export @{}
+  bindNotifyFunction as default,
+  bindNotifyFunction as bindUpdateFunction,
+
+export function bindNotifyFunction() ::
+  let notifyList = []
+  let current
+
+  update.subscribe = subscribe
+  return update
+
+  function update(next) ::
+    if current === next :: return
+
+    current = next
+    for const cb of notifyList ::
+      try :: cb(current)
+      catch err :: discard(cb)
+
+  function subscribe(...args) ::
+    const callback = args.pop()
+    const skipInitialCall = args[0]
+
+    if -1 !== notifyList.indexOf(callback) ::
+      return
+    if 'function' !== typeof callback ::
+      throw new TypeError @ `Please subscribe with a function`
+
+    notifyList = notifyList.concat @ [callback]
+    if ! skipInitialCall ::
+      callback(current)
+    unsubscribe.unsubscribe = unsubscribe
+    return unsubscribe
+
+    function unsubscribe() ::
+      discard(callback)
+
+  function discard(callback) ::
+    notifyList = notifyList
+      .filter @ e => callback !== e
+

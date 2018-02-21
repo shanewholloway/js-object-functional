@@ -1,0 +1,157 @@
+import @{}
+  o_keys, o_assign, o_create, o_freeze, o_isFrozen, o_setPrototypeOf
+from './impl_object_fns.jsy'
+
+export default stateActionDispatch
+export function stateActionDispatch(host, options={}) ::
+  if options.transform ::
+    const xform = bindStateTransform(options.transform, 'transform', options.transformFilter)
+    options.after = [].concat @ options.after || [], xform
+
+  if options.viewTransform ::
+    const xform = bindStateTransform(options.viewTransform, 'viewTransform', options.viewTransformFilter)
+    options.changed = [].concat @ options.changed || [], xform
+
+  const isChanged = options.isChanged || host.__is_changed__ || isObjectChanged
+  const on_before = asDispatchCallbackPipeline @ options.before, host.__dispatch_before__, 'before'
+  const on_error = asDispatchCallbackPipeline @ options.error, host.__dispatch_error__, 'error'
+  const on_after = asDispatchCallbackPipeline @ options.after, host.__dispatch_after__, 'after'
+  const on_changed = asDispatchCallbackPipeline @ options.changed, host.__dispatch_changed__, 'changed'
+  const on_freeze = asDispatchCallbackPipeline @ options.freeze, host.__dispatch_freeze__, 'freeze'
+
+  if undefined !== isChanged && 'function' !== typeof isChanged ::
+    throw new TypeError @ `Dispatch expected 'isChanged' option to be a function instance`
+
+  let state = {}, state_summary, tip_view
+  return __dispatch__
+
+  function __dispatch__(notify, actionName, actionArgs, view) ::
+    const pre_state = state
+    const tgt = o_create @ host.__impl_proto__
+
+    o_assign @ tgt, state
+
+    let result
+    const ctx = @: action: [actionName, actionArgs, view]
+      pre_state, isTipView: tip_view === view && view !== undefined
+
+    try ::
+      if undefined !== on_before ::
+        on_before(tgt, ctx)
+
+      try ::
+        // dispatch action method
+        if actionName ::
+          result = tgt[actionName].apply(tgt, actionArgs)
+          ctx.result = result
+        else ::
+          ctx.result = result = tip_view = tgt
+
+        // transform from impl down to a view
+        o_setPrototypeOf(tgt, host.__view_proto__)
+
+      catch err ::
+        // transform from impl down to a view
+        o_setPrototypeOf(tgt, host.__view_proto__)
+
+        // handle error from action method
+        if undefined === on_error :: throw err
+
+        const shouldThrow = on_error(err, tgt, ctx)
+        if false !== shouldThrow :: throw err
+
+      if undefined !== on_after ::
+        on_after(tgt, ctx)
+
+      // capture state after dispatching action
+      const post_state = o_assign @ {}, tgt
+      ctx.post_state = post_state
+
+      if pre_state !== state ::
+        throw new Error @ `Async conflicting update of "${host.constructor.name}" occured`
+
+      const change_summary = isChanged(pre_state, post_state, state_summary, ctx)
+      if change_summary ::
+        ctx.changed = true
+        state = post_state
+        state_summary = change_summary
+        tip_view = tgt
+
+        if undefined !== on_changed ::
+          on_changed(tgt, ctx)
+
+      else if tgt === result ::
+        ctx.result = result = tip_view
+
+    finally ::
+      if undefined !== on_freeze ::
+        try ::
+          on_freeze(tgt, ctx)
+        catch err ::
+          Promise.reject(err)
+      o_freeze(tgt)
+
+    notify(tip_view)
+    return result
+
+// ---
+
+export function asDispatchCallbackPipeline(callback, host_callback, callback_name) ::
+  if null != host_callback ::
+    callback = [].concat @ host_callback, callback || []
+  else if null == callback :: return
+
+  if 'function' === typeof callback :: return callback
+
+  if Array.isArray(callback) || callback[Symbol.iterator] ::
+    const callbackList = Array.from(callback).filter(e => null != e)
+
+    if callbackList.some @ cb => 'function' !== typeof cb ::
+      throw new TypeError @ `Dispatch expected '${callback_name}' option to only include functions in list`
+
+    if callbackList.length <= 1 ::
+      callback = callbackList.pop()
+    else ::
+      callback = function (tgt, arg1, arg2) ::
+        for const cb of callbackList ::
+          try :: cb(tgt, arg1, arg2)
+          catch err ::
+            Promise.reject(err)
+
+  if 'function' !== typeof callback ::
+    throw new TypeError @ `Dispatch expected '${callback_name}' option to be a function instance or list of functions`
+  return callback
+
+// ---
+
+export function isObjectChanged(prev, next) ::
+  if prev === undefined ::
+    return next !== undefined
+
+  for const key of o_keys(next) ::
+    if ! @ key in prev ::
+      return true // added
+
+  for const key of o_keys(prev) ::
+    if prev[key] !== next[key] ::
+      return true // changed
+    if ! @ key in next ::
+      return true // removed
+
+  return false
+
+// ---
+
+export function bindStateTransform(xform, xform_name, xform_filter) ::
+  if 'function' !== typeof xform ::
+    throw new TypeError(`Expected ${xform_name}to be a function`)
+
+  if true === xform_filter || 'not-frozen' ::
+    xform_filter = attr => ! o_isFrozen(attr)
+
+  return function(tgt) ::
+    for const key of o_keys(tgt) ::
+      const attr = tgt[key]
+      if ! xform_filter || xform_filter(attr, key) ::
+        tgt[key] = xform @ attr
+
