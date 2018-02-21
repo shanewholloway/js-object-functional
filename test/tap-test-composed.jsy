@@ -46,6 +46,11 @@ module.exports = exports = function(tap, options={}) ::
     const item_b = new InnerObject()
     container.track @ 'item_bbb', item_b
 
+    const item_c = new InnerObject()
+    item_c.update @# 'demo', 'item', 'ccc'
+    const item_d = new InnerObject()
+    item_d.update @: demo: 'item d', answer: 42
+
     t.deepEqual @ actual_state.trackers, @{}
         'item_aaa': @{} value: 'some message'
       , 'item_bbb': {}
@@ -73,3 +78,19 @@ module.exports = exports = function(tap, options={}) ::
     t.deepEqual @ actual_state.trackers, @{}
         'item_aaa': @{} value: 'finally done'
       , 'item_bbb': @{} value: 2042
+
+
+
+    container.track @ 'item_ccc', item_c
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'finally done'
+        'item_bbb': @{} value: 2042
+        'item_ccc': @{} value: @[] 'demo', 'item', 'ccc'
+
+
+    container.track @ 'item_ddd', item_d
+    t.deepEqual @ actual_state.trackers, @{}
+        'item_aaa': @{} value: 'finally done'
+        'item_bbb': @{} value: 2042
+        'item_ccc': @{} value: @[] 'demo', 'item', 'ccc'
+        'item_ddd': @{} value: @{} demo: 'item d', answer: 42

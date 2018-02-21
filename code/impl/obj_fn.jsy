@@ -1,0 +1,143 @@
+import @{}
+  o_assign, o_create, o_freeze, o_defineProperties, o_getPrototypeOf
+from './statics.js'
+
+import bindNotifyFunction from './notify.jsy'
+import stateActionDispatch from './dispatch.jsy'
+
+
+export function ObjectFunctional() ::
+  return asFunctionalInstance(this)
+
+const cache = new WeakMap()
+
+export function asFunctionalInstance(host_instance, ...options) ::
+  const host0 = o_getPrototypeOf(host_instance)
+  let fo_create = cache.get(host0)
+  if undefined !== fo_create ::
+    return fo_create()
+
+  fo_create = asFunctionalHost @
+    host_instance, host0
+    o_assign({}, ...options)
+
+  cache.set(host0, fo_create)
+  return fo_create(true)
+
+export default asFunctionalObject
+export function asFunctionalObject(host_obj, ...options) ::
+  let fo_create = cache.get(host_obj)
+  if undefined !== fo_create ::
+    return fo_create()
+
+  fo_create = asFunctionalHost @
+    o_create(host_obj), host_obj,
+    o_assign({}, ...options)
+
+  cache.set(host_obj, fo_create)
+  return fo_create(true)
+
+// ---
+
+const hidden = new WeakMap()
+function view_disp_action(view, actionName, actionArgs) ::
+  const e = hidden.get(view.subscribe)
+  return e.disp_action @ e.notify, actionName, actionArgs, view
+
+
+export function asFunctionalHost(host, host0, options) ::
+  const dispatchActionFor = bindDispatchAction(host0, options)
+  if options.actions :: defineAction(options.actions)
+
+  const __impl_proto__ = o_create(host0)
+  const __view_proto__ = o_create(host0)
+
+  return fo_create
+
+  function fo_create(allowDefineAction) ::
+    // initialize options
+    const notify = null == options.notify
+      ? bindNotifyFunction()
+      : options.notify()
+
+    const id = 0 | 0xfffffff * Math.random()
+    const sub = notify.subscribe
+    sub.id = id
+    const subscribe = @{} value: sub
+
+    const props = @{} subscribe
+      __impl_proto__: @{} configurable: true, value:
+        o_create @ __impl_proto__, @{} subscribe
+      __view_proto__: @{} configurable: true, value:
+        o_create @ __view_proto__, @{} subscribe
+      asAction: @{} set: allowDefineAction ? defineAction : noop
+
+    const f_host = o_freeze @ o_create @ host, props
+    const disp_action = dispatchActionFor(f_host)
+
+    hidden.set @ sub, @{} id, disp_action, notify
+
+    // initialize the internal stat with initial view
+    disp_action(notify, null, [], null)
+
+    return f_host
+
+
+  function defineAction(actionList) ::
+      if undefined === actionList || null === actionList :: return
+      else if 'function' === typeof actionList ::
+        actionList = @[] @[] actionList.name, actionList
+      else if 'string' === typeof actionList ::
+        actionList = @[] @[] actionList, host0[actionList]
+      else if ! Array.isArray @ actionList ::
+        actionList = Object.entries(actionList)
+      else if 'string' === typeof actionList[0] ::
+        actionList = @[] actionList
+
+
+      const impl_props={}, view_props={}, host0_props={}
+      for let [actionName, action] of actionList ::
+        if ! actionName ::
+          throw new TypeError @ `Action name not found`
+        if 'function' !== typeof action ::
+          throw new TypeError @ `Expected action "${actionName}" to be a function, but found "${typeof action}"`
+
+        let fn
+        if action.action :: // redefined...
+          fn = action
+          action = action.action
+        else ::
+          // trick to set the function displayName
+          const ns = @{} [actionName](...actionArgs) ::
+            return view_disp_action(this, actionName, actionArgs)
+          fn = ns[actionName]
+        fn.action = action
+
+        impl_props[actionName] = @{} value: action
+        view_props[actionName] = @{} value: fn
+        host0_props[actionName] = @{} value: fn, configurable: true
+
+      o_defineProperties @ __impl_proto__, impl_props
+      o_defineProperties @ __view_proto__, view_props
+      o_defineProperties @ host0, host0_props
+
+
+
+function bindDispatchAction(host0, options) ::
+  let dispatchActionFor = options.dispatchAction
+  if null != dispatchActionFor ::
+    if 'function' !== typeof dispatchActionFor ::
+      throw new TypeError(`Expected a dispatchAction(notify, actionName, actionArgs){…} function`)
+    return dispatchActionFor
+
+  else if 'function' === typeof host0.__dispatch__ ::
+    dispatchActionFor = host =>
+      (notify, actionName, actionArgs) =>
+        host.__dispatch__(notify, actionName, actionArgs)
+  else ::
+    dispatchActionFor = host =>
+      stateActionDispatch(host, options)
+
+  return dispatchActionFor
+
+function noop() {}

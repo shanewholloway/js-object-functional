@@ -1,6 +1,6 @@
 import @{}
   o_keys, o_assign, o_create, o_freeze, o_isFrozen, o_setPrototypeOf
-from './impl_object_fns.jsy'
+from './statics.js'
 
 export default stateActionDispatch
 export function stateActionDispatch(host, options={}) ::

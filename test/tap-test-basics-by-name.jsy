@@ -99,11 +99,11 @@ module.exports = exports = function(tap, options={}) ::
     let src
 
     src = root.sync.toString()
-    t.ok @ src.includes @ 'dispatchAction', src
+    t.ok @ src.includes @ '_disp_action', src
 
 
     src = root.sync().sync.toString()
-    t.ok @ src.includes @ 'dispatchAction', src
+    t.ok @ src.includes @ '_disp_action', src
 
     root.outside()
     root.sync().outside()

@@ -5,9 +5,14 @@ const testModule = require('..') // require('object-functional')
 const tap = require('tap-lite-tester')
 tap.start()
 
-if 1 ::
+if 0 ::
+  require('./tap-test-composed.jsy') @ tap
+else if 0 ::
+  require('./tap-test-proto-basics.jsy') @ tap
+else ::
   require('./tap-test-basics.jsy') @ tap
   require('./tap-test-basics-by-name.jsy') @ tap
+  //require('./tap-test-proto-basics.jsy') @ tap
   require('./tap-test-composed.jsy') @ tap
   require('./tap-test-wrappers.jsy') @ tap
   require('./tap-test-examples.jsy') @ tap
