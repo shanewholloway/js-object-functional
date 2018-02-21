@@ -5,7 +5,7 @@ Object-Functional programming paradigm for JavaScript, including change isolatio
 ### Class-based Example
 
 ```javascript
-const {ObjectFunctional} = require('object-functional')
+import {ObjectFunctional} from 'object-functional'
 
 class CounterWithList extends ObjectFunctional ::
   asAction = this.init
@@ -47,7 +47,9 @@ setInterval @
 
 
 ```javascript
-const createCounterWithList = module.asFunctionalProto @:
+import {asFunctionalProto} from 'object-functional'
+
+const createCounterWithList = asFunctionalProto @:
   counter: 0
   lst: Object.freeze @ []
 
