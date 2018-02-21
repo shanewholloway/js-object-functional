@@ -3,10 +3,14 @@ const {fork} = require('child_process')
 module.exports = exports = function(tap, options={}) ::
 
   const demoList = @[]
-      'demo-simple-counter'
-    , 'demo-counter-with-list'
-    , 'demo-immu-counter-with-list'
-    , 'demo-composed'
+    'demo-simple-counter'
+    'demo-counter-with-list'
+    'demo-immu-counter-with-list'
+    'demo-composed'
+
+    'demo-proto-simple-counter'
+    'demo-proto-counter-with-list'
+    'demo-proto-composed'
 
   for const demo_name of demoList ::
     tap.test @ `examples/${demo_name}.jsy`, t => ::

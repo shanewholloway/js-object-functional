@@ -1,5 +1,3 @@
-global.Observable = require('zen-observable')
-
 const module = require('..')
 
 class CounterWithList extends module.ObjectFunctional ::

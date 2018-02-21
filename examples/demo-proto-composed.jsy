@@ -1,23 +1,21 @@
 const module = require('..')
 
 
-class InnerObject extends module.ObjectFunctional ::
-  asAction = this.update
-  update(value) ::
-    this.value = value
+const createInnerObject = module.asFunctionalProto @:
+  asAction: @{}
+    update(value) ::
+      this.value = value
 
-class OuterObject extends module.ObjectFunctional ::
-  asAction = this.init
-  init() ::
-    this.trackers = {}
+const createOuterObject = module.asFunctionalProto @:
+  trackers: {}
+
+  asAction: @{}
+    updateTracker(key, updatedTarget) ::
+      this.trackers = @{} ...this.trackers, [key]: updatedTarget || null
 
   track(key, target) ::
     target.subscribe @ updatedTarget =>
       this.updateTracker(key, updatedTarget)
-
-  asAction = this.updateTracker
-  updateTracker(key, updatedTarget) ::
-    this.trackers = @{} ...this.trackers, [key]: updatedTarget || null
 
 
 main()
@@ -30,18 +28,17 @@ function main() ::
     console.log @ `debug [${td}] :: ${repr}\n`
 
   ::
-    const container = new OuterObject()
-    container.init()
+    const container = createOuterObject()
 
     container.subscribe @ view => ::
       const trackers = JSON.parse @ JSON.stringify @ view.trackers
       debug @: trackers
 
-    const item_a = new InnerObject()
+    const item_a = createInnerObject()
     item_a.update @ 'some message'
     container.track @ 'item_aaa', item_a
 
-    const item_b = new InnerObject()
+    const item_b = createInnerObject()
     container.track @ 'item_bbb', item_b
 
     item_b.update @ 1942

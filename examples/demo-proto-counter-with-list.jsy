@@ -1,23 +1,19 @@
-const module = require('../cjs/immu')
+const module = require('..')
 
-class CounterWithList extends module.ImmuObjectFunctional ::
-  asAction = this.init
-  init(counter=0) ::
-    this.counter = counter
-    this.lst = @[] counter
-    return this
+const createCounterWithList = module.asFunctionalProto @:
+  counter: 0
+  lst: Object.freeze @ []
 
-  asAction = this.increment
-  increment(howHigh=1) ::
-    this.counter += howHigh
-    this.lst = this.lst.concat @ this.counter
-    return this
+  asAction: @{}
+    increment(howHigh=1) ::
+      this.counter += howHigh
+      this.lst = Object.freeze @ this.lst.concat @ this.counter
+      return this
 
-  asAction = this.decrement
-  decrement(howLow=1) ::
-    this.counter -= howLow
-    this.lst = this.lst.concat @ this.counter
-    return this
+    decrement(howLow=1) ::
+      this.counter -= howLow
+      this.lst = Object.freeze @ this.lst.concat @ this.counter
+      return this
 
   last() ::
     return this.lst[this.lst.length - 1]
@@ -37,17 +33,17 @@ function main() ::
     console.log @ `debug [${td}] :: ${repr}\n`
 
   ::
-    const host0 = new CounterWithList()
+    const host0 = createCounterWithList()
     debug @: host0
 
-    const view1 = host0.init(42)
+    const view1 = host0
     debug @: last: view1.last(), view1
 
     view1.subscribe @ update => ::
       debug @: update
 
 
-    const view2 = view1.increment(10)
+    const view2 = host0.increment(10)
     debug @: last: view2.last(), view2
 
     const view3 = host0.decrement(20)

@@ -30,7 +30,7 @@ export function asFunctionalObject(...args) ::
 export function asFunctionalProto(host_obj, ...options) ::
   let fo_create = cache.get(host_obj)
   if undefined === fo_create ::
-    const actions = host_obj.actions || host_obj.asAction
+    const actions = host_obj.asAction || host_obj.asActions
     if undefined !== actions && 'function' !== typeof actions ::
       options.push @: actions
 

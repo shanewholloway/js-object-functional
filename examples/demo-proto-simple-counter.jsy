@@ -1,20 +1,20 @@
 const module = require('..')
 
-class Counter extends module.ObjectFunctional ::
-  asAction = this.init
-  init(counter=0) ::
-    this.counter = counter
-    return this
+const createCounter = module.asFunctionalProto @:
+  counter: 0
 
-  asAction = this.increment
-  increment(howHigh=1) ::
-    this.counter += howHigh
-    return this
+  asAction: @{}
+    init(counter=0) ::
+      this.counter = counter
+      return this
 
-  asAction = this.decrement
-  decrement(howLow=1) ::
-    this.counter -= howLow
-    return this
+    increment(howHigh=1) ::
+      this.counter += howHigh
+      return this
+
+    decrement(howLow=1) ::
+      this.counter -= howLow
+      return this
 
   mutateShouldFail() ::
     this.counter = 'fail'
@@ -31,13 +31,13 @@ function main() ::
     console.log @ `debug [${td}] :: ${repr}\n`
 
   ::
-    const host0 = new Counter()
+    const host0 = createCounter()
     debug @: host0
 
     host0.subscribe @ viewUpdate => ::
       debug @: viewUpdate
 
-    const view1 = host0.init(42)
+    const view1 = host0
     debug @: view1
 
     const view2 = host0.increment(10)
