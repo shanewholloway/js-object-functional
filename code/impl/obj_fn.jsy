@@ -14,71 +14,80 @@ const cache = new WeakMap()
 export function asFunctionalInstance(host_instance, ...options) ::
   const host0 = o_getPrototypeOf(host_instance)
   let fo_create = cache.get(host0)
-  if undefined !== fo_create ::
-    return fo_create()
+  if undefined === fo_create ::
+    fo_create = asFunctionalHost @
+      host_instance, host0, options
 
-  fo_create = asFunctionalHost @
-    host_instance, host0
-    o_assign({}, ...options)
-
-  cache.set(host0, fo_create)
-  return fo_create(true)
+    cache.set(host0, fo_create)
+  return fo_create()
 
 export default asFunctionalObject
-export function asFunctionalObject(host_obj, ...options) ::
+export function asFunctionalObject(...args) ::
+  const fo_create = asFunctionalProto(...args)
+  return fo_create()
+
+
+export function asFunctionalProto(host_obj, ...options) ::
   let fo_create = cache.get(host_obj)
-  if undefined !== fo_create ::
-    return fo_create()
+  if undefined === fo_create ::
+    const actions = host_obj.actions || host_obj.asAction
+    if undefined !== actions && 'function' !== typeof actions ::
+      options.push @: actions
 
-  fo_create = asFunctionalHost @
-    o_create(host_obj), host_obj,
-    o_assign({}, ...options)
+    fo_create = asFunctionalHost @
+      o_create(host_obj), host_obj, options
 
-  cache.set(host_obj, fo_create)
-  return fo_create(true)
+    cache.set(host_obj, fo_create)
+  return fo_create
 
 // ---
 
 const hidden = new WeakMap()
 function view_disp_action(view, actionName, actionArgs) ::
-  const e = hidden.get(view.subscribe)
-  return e.disp_action @ e.notify, actionName, actionArgs, view
+  const act = hidden.get(view.subscribe)
+  return act.disp @ act.notify, actionName, actionArgs, view
 
 
 export function asFunctionalHost(host, host0, options) ::
-  const dispatchActionFor = bindDispatchAction(host0, options)
-  if options.actions :: defineAction(options.actions)
+  if null == options :: options = {}
+  else if Array.isArray(options) ::
+    options = o_assign @ {}, ...options
 
   const __impl_proto__ = o_create(host0)
   const __view_proto__ = o_create(host0)
 
+  const dispatchActionFor = bindDispatchAction(host0, options)
+  if options.actions :: defineAction(options.actions)
+  let asAction = @{} set: defineAction
+
   return fo_create
 
-  function fo_create(allowDefineAction) ::
+  function fo_create() ::
     // initialize options
     const notify = null == options.notify
       ? bindNotifyFunction()
       : options.notify()
 
-    const id = 0 | 0xfffffff * Math.random()
     const sub = notify.subscribe
-    sub.id = id
     const subscribe = @{} value: sub
 
-    const props = @{} subscribe
+    const props = @{} subscribe, asAction
       __impl_proto__: @{} configurable: true, value:
         o_create @ __impl_proto__, @{} subscribe
       __view_proto__: @{} configurable: true, value:
         o_create @ __view_proto__, @{} subscribe
-      asAction: @{} set: allowDefineAction ? defineAction : noop
+
+    if _noop_asAction !== asAction ::
+      // clear asAction for next creation
+      asAction = _noop_asAction
 
     const f_host = o_freeze @ o_create @ host, props
-    const disp_action = dispatchActionFor(f_host)
+    const disp = dispatchActionFor(f_host)
 
-    hidden.set @ sub, @{} id, disp_action, notify
+    hidden.set @ sub, @{} disp, notify
 
-    // initialize the internal stat with initial view
-    disp_action(notify, null, [], null)
+    // initialize the internal state with initial view
+    disp(notify, null, [], null)
 
     return f_host
 
@@ -140,4 +149,4 @@ function bindDispatchAction(host0, options) ::
 
   return dispatchActionFor
 
-function noop() {}
+const _noop_asAction = @{} set() ::
