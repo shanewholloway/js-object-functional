@@ -3,7 +3,7 @@ export @{}
   bindNotifyFunction as bindUpdateFunction,
 
 export function bindNotifyFunction() ::
-  let notifyList = []
+  let notifyList = null
   let current
 
   update.subscribe = subscribe
@@ -12,12 +12,16 @@ export function bindNotifyFunction() ::
   function update(next) ::
     if current === next :: return
 
-    current = next
-    for const cb of notifyList ::
-      try :: cb(current)
-      catch err :: discard(cb)
+    update.current = current = next
+    if null !== notifyList ::
+      for const cb of notifyList ::
+        try :: cb(current)
+        catch err :: discard(cb)
 
   function subscribe(...args) ::
+    if null === notifyList ::
+      notifyList = []
+
     const callback = args.pop()
     const skipInitialCall = args[0]
 

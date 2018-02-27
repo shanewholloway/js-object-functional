@@ -44,8 +44,8 @@ export function asFunctionalProto(host_obj, ...options) ::
 
 const hidden = new WeakMap()
 function view_disp_action(view, actionName, actionArgs) ::
-  const act = hidden.get(view.subscribe)
-  return act.disp @ act.notify, actionName, actionArgs, view
+  const actx = hidden.get(view.subscribe)
+  return actx.disp @ actx, actionName, actionArgs, view
 
 
 export function asFunctionalHost(host, host0, options) ::
@@ -54,7 +54,8 @@ export function asFunctionalHost(host, host0, options) ::
     options = o_assign @ {}, ...options
 
   const __impl_proto__ = o_create(host0)
-  const __view_proto__ = o_create(host0)
+  const __rw_view_proto__ = o_create(host0)
+  const __ro_view_proto__ = o_create(host0)
 
   const dispatchActionFor = bindDispatchAction(host0, options)
   if options.actions :: defineAction(options.actions)
@@ -64,18 +65,26 @@ export function asFunctionalHost(host, host0, options) ::
 
   function fo_create() ::
     // initialize options
-    const notify = null == options.notify
-      ? bindNotifyFunction()
-      : options.notify()
+    const rw_notify = bindNotifyFunction()
+    const rw_props = @{}
+      subscribe: @{} value: rw_notify.subscribe
+      readonly_view: @{} get() :: return ro_notify.current
 
-    const sub = notify.subscribe
-    const subscribe = @{} value: sub
+    const ro_notify = bindNotifyFunction()
+    const ro_props = @{}
+      subscribe: @{} value: ro_notify.subscribe
+      readonly_view: @{} get() :: return ro_notify.current
 
-    const props = @{} subscribe, asAction
+    const props = @{} asAction
+      subscribe: rw_props.subscribe
+      readonly_view: rw_props.readonly_view
+
       __impl_proto__: @{} configurable: true, value:
-        o_create @ __impl_proto__, @{} subscribe
-      __view_proto__: @{} configurable: true, value:
-        o_create @ __view_proto__, @{} subscribe
+        o_create @ __impl_proto__, rw_props
+      __rw_view_proto__: @{} configurable: true, value:
+        o_create @ __rw_view_proto__, rw_props
+      __ro_view_proto__: @{} configurable: true, value:
+        o_create @ __ro_view_proto__, ro_props
 
     if _noop_asAction !== asAction ::
       // clear asAction for next creation
@@ -84,10 +93,11 @@ export function asFunctionalHost(host, host0, options) ::
     const f_host = o_freeze @ o_create @ host, props
     const disp = dispatchActionFor(f_host)
 
-    hidden.set @ sub, @{} disp, notify
+    const actx = @{} disp, rw_notify, ro_notify
+    hidden.set @ rw_notify.subscribe, actx
 
     // initialize the internal state with initial view
-    disp(notify, null, [], null)
+    disp(actx, null, [], null)
 
     return f_host
 
@@ -104,7 +114,7 @@ export function asFunctionalHost(host, host0, options) ::
         actionList = @[] actionList
 
 
-      const impl_props={}, view_props={}, host0_props={}
+      const impl_props={}, ro_view_props={}, rw_view_props={}, host0_props={}
       for let [actionName, action] of actionList ::
         if ! actionName ::
           throw new TypeError @ `Action name not found`
@@ -123,26 +133,29 @@ export function asFunctionalHost(host, host0, options) ::
         fn.action = action
 
         impl_props[actionName] = @{} value: action
-        view_props[actionName] = @{} value: fn
+        ro_view_props[actionName] = ro_action
+        rw_view_props[actionName] = @{} value: fn
         host0_props[actionName] = @{} value: fn, configurable: true
 
       o_defineProperties @ __impl_proto__, impl_props
-      o_defineProperties @ __view_proto__, view_props
+      o_defineProperties @ __ro_view_proto__, ro_view_props
+      o_defineProperties @ __rw_view_proto__, rw_view_props
       o_defineProperties @ host0, host0_props
 
-
+const ro_action = @{} value() ::
+  throw new Error @ 'View is read-only. Action method disallowed'
 
 function bindDispatchAction(host0, options) ::
   let dispatchActionFor = options.dispatchAction
   if null != dispatchActionFor ::
     if 'function' !== typeof dispatchActionFor ::
-      throw new TypeError(`Expected a dispatchAction(notify, actionName, actionArgs){…} function`)
+      throw new TypeError(`Expected a dispatchAction(actx, actionName, actionArgs){…} function`)
     return dispatchActionFor
 
   else if 'function' === typeof host0.__dispatch__ ::
     dispatchActionFor = host =>
-      (notify, actionName, actionArgs) =>
-        host.__dispatch__(notify, actionName, actionArgs)
+      (actx, actionName, actionArgs) =>
+        host.__dispatch__(actx, actionName, actionArgs)
   else ::
     dispatchActionFor = host =>
       stateActionDispatch(host, options)

@@ -88,3 +88,56 @@ module.exports = exports = function(tap, options={}) ::
     t.strictEqual(view2.key, 'some-other-value')
     t.deepEqual(_update_log_, [null, 'some-value', 'some-other-value'])
 
+
+  tap.test @ 'Subscribe test', t => ::
+    let obj, view1, view2
+
+    const createTestObject = testModule.asFunctionalProto @:
+      getKey(testKey) :: return this[testKey]
+
+      asAction: @{}
+        someTestAction(testKey, testValue) ::
+          t.notStrictEqual(this, obj)
+          t.notStrictEqual(this, view1)
+          t.notStrictEqual(this, view2)
+
+          this[testKey] = testValue
+          return this
+
+    obj = createTestObject()
+
+    let ro_view
+    const _update_log_ =  []
+    obj.readonly_view.subscribe @ view => ::
+      _update_log_.push @ view ? view.key : null
+      ro_view = view
+
+    t.strictEqual(obj.key, undefined)
+    t.deepEqual(_update_log_, [null])
+
+    view1 = obj.someTestAction('key', 'some-value')
+    t.strictEqual(obj.key, undefined)
+    t.strictEqual(view1.key, 'some-value')
+    t.strictEqual(ro_view.key, 'some-value')
+    t.strictEqual(ro_view.getKey('key'), 'some-value')
+    t.deepEqual(_update_log_, [null, 'some-value'])
+
+    view2 = view1.someTestAction('key', 'some-other-value')
+    t.strictEqual(obj.key, undefined)
+    t.strictEqual(view1.key, 'some-value')
+    t.strictEqual(view2.key, 'some-other-value')
+    t.strictEqual(ro_view.getKey('key'), 'some-other-value')
+    t.deepEqual(_update_log_, [null, 'some-value', 'some-other-value'])
+
+    t.throws @
+      @=> ::
+        ro_view.someTestAction('key', 'some-value')
+
+      @ /View is read-only. Action method disallowed/
+
+    t.strictEqual(obj.key, undefined)
+    t.strictEqual(view1.key, 'some-value')
+    t.strictEqual(view2.key, 'some-other-value')
+    t.strictEqual(ro_view.getKey('key'), 'some-other-value')
+    t.deepEqual(_update_log_, [null, 'some-value', 'some-other-value'])
+

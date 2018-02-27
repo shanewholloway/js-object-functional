@@ -22,10 +22,16 @@ export function stateActionDispatch(host, options={}) ::
   if undefined !== isChanged && 'function' !== typeof isChanged ::
     throw new TypeError @ `Dispatch expected 'isChanged' option to be a function instance`
 
-  let state = {}, state_summary, tip_view
+  let state = {}, state_summary, tip_view, readonly_tip_view
   return __dispatch__
 
-  function __dispatch__(notify, actionName, actionArgs, view) ::
+  function update_tip_view(tgt) ::
+    readonly_tip_view = o_create @ host.__ro_view_proto__
+    o_freeze @ o_assign @ readonly_tip_view, state
+
+    return tip_view = tgt
+
+  function __dispatch__(act, actionName, actionArgs, view) ::
     const pre_state = state
     const tgt = o_create @ host.__impl_proto__
 
@@ -45,14 +51,14 @@ export function stateActionDispatch(host, options={}) ::
           result = tgt[actionName].apply(tgt, actionArgs)
           ctx.result = result
         else ::
-          ctx.result = result = tip_view = tgt
+          ctx.result = result = update_tip_view(tgt)
 
         // transform from impl down to a view
-        o_setPrototypeOf(tgt, host.__view_proto__)
+        o_setPrototypeOf(tgt, host.__rw_view_proto__)
 
       catch err ::
         // transform from impl down to a view
-        o_setPrototypeOf(tgt, host.__view_proto__)
+        o_setPrototypeOf(tgt, host.__rw_view_proto__)
 
         // handle error from action method
         if undefined === on_error :: throw err
@@ -75,7 +81,7 @@ export function stateActionDispatch(host, options={}) ::
         ctx.changed = true
         state = post_state
         state_summary = change_summary
-        tip_view = tgt
+        update_tip_view(tgt)
 
         if undefined !== on_changed ::
           on_changed(tgt, ctx)
@@ -91,7 +97,8 @@ export function stateActionDispatch(host, options={}) ::
           Promise.reject(err)
       o_freeze(tgt)
 
-    notify(tip_view)
+    act.ro_notify(readonly_tip_view)
+    act.rw_notify(tip_view)
     return result
 
 // ---
