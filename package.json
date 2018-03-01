@@ -1,6 +1,6 @@
 {
   "name": "object-functional",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Object-Functional programming paradigm for JavaScript, including change isolation and frozen views.",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",

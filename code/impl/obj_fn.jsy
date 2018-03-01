@@ -68,6 +68,7 @@ export function asFunctionalHost(host, host0, options) ::
     const rw_notify = bindNotifyFunction()
     const rw_props = @{}
       subscribe: @{} value: rw_notify.subscribe
+      readwrite_view: @{} get() :: return rw_notify.current
       readonly_view: @{} get() :: return ro_notify.current
 
     const ro_notify = bindNotifyFunction()
@@ -77,6 +78,7 @@ export function asFunctionalHost(host, host0, options) ::
 
     const props = @{} asAction
       subscribe: rw_props.subscribe
+      readwrite_view: rw_props.readwrite_view
       readonly_view: rw_props.readonly_view
 
       __impl_proto__: @{} configurable: true, value:

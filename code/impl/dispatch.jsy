@@ -31,7 +31,7 @@ export function stateActionDispatch(host, options={}) ::
 
     return tip_view = tgt
 
-  function __dispatch__(act, actionName, actionArgs, view) ::
+  function __dispatch__(actx, actionName, actionArgs, view) ::
     const pre_state = state
     const tgt = o_create @ host.__impl_proto__
 
@@ -97,8 +97,8 @@ export function stateActionDispatch(host, options={}) ::
           Promise.reject(err)
       o_freeze(tgt)
 
-    act.ro_notify(readonly_tip_view)
-    act.rw_notify(tip_view)
+    actx.ro_notify(readonly_tip_view)
+    actx.rw_notify(tip_view)
     return result
 
 // ---
